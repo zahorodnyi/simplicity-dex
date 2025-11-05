@@ -17,7 +17,7 @@ pub fn init_logger() -> LoggerGuard {
         .with_writer(std_out_writer)
         .with_target(false)
         .with_level(true)
-        .with_filter(EnvFilter::try_from_default_env().unwrap_or(EnvFilter::new("TRACE")));
+        .with_filter(EnvFilter::try_from_default_env().unwrap_or(EnvFilter::new("DEBUG")));
 
     let std_err_layer = fmt::layer()
         .with_writer(std_err_writer)

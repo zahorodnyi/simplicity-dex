@@ -1,0 +1,19 @@
+[package]
+name = "nostr_relay_connector"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+readme.workspace = true
+
+[dependencies]
+tokio = { workspace = true, features = ["time"] }
+futures-util = {  workspace = true  }
+serde_json = {  workspace = true  }
+anyhow = {  workspace = true  }
+url = {  workspace = true  }
+nostr = { workspace = true }
+global_utils = { workspace = true }
+nostr-sdk = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }

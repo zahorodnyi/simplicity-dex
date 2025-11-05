@@ -8,3 +8,10 @@ readme.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
+tokio = { workspace = true }
+global_utils = { workspace = true }
+nostr-sdk = { workspace = true }
+nostr = { workspace = true }
+nostr_relay_connector = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
