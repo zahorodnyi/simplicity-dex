@@ -9,7 +9,7 @@ pub async fn handle(
     maker_event_id: EventId,
     maker_pubkey: PublicKey,
     tags: OrderReplyEventTags,
-) -> anyhow::Result<EventId> {
+) -> crate::error::Result<EventId> {
     let client_signer = client.get_signer().await?;
     let client_pubkey = client_signer.get_public_key().await?;
     let timestamp_now = Timestamp::now();

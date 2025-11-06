@@ -4,7 +4,7 @@ use nostr_relay_connector::relay_client::RelayClient;
 use nostr_sdk::prelude::Events;
 use std::collections::{BTreeMap, BTreeSet};
 
-pub async fn handle(client: &RelayClient, event_id: EventId) -> anyhow::Result<Events> {
+pub async fn handle(client: &RelayClient, event_id: EventId) -> crate::error::Result<Events> {
     let events = client
         .req_and_wait(Filter {
             ids: None,

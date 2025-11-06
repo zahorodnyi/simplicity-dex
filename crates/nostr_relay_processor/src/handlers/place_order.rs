@@ -4,7 +4,7 @@ use nostr::{EventBuilder, EventId, Tag, TagKind, Timestamp};
 use nostr_relay_connector::relay_client::RelayClient;
 use std::borrow::Cow;
 
-pub async fn handle(client: &RelayClient, tags: OrderPlaceEventTags) -> anyhow::Result<EventId> {
+pub async fn handle(client: &RelayClient, tags: OrderPlaceEventTags) -> crate::error::Result<EventId> {
     let client_signer = client.get_signer().await?;
     let client_pubkey = client_signer.get_public_key().await?;
     let timestamp_now = Timestamp::now();

@@ -2,10 +2,10 @@ mod utils;
 
 mod tests {
     use crate::utils::{DEFAULT_CLIENT_TIMEOUT, DEFAULT_RELAY_LIST, TEST_LOGGER};
-    use nostr::{Keys, ToBech32};
+    use nostr::{EventId, Keys, ToBech32};
     use nostr_relay_connector::relay_client::ClientConfig;
     use nostr_relay_processor::relay_processor::{OrderPlaceEventTags, OrderReplyEventTags, RelayProcessor};
-    use std::str::FromStr;
+    use nostr_relay_processor::types::{CustomKind, MakerOrderKind, TakerOrderKind};
     use std::time::Duration;
     use tracing::{info, instrument};
 
@@ -13,7 +13,7 @@ mod tests {
     #[tokio::test]
     async fn test_wss_metadata() -> anyhow::Result<()> {
         let _guard = &*TEST_LOGGER;
-        let key_maker = Keys::from_str("nsec13acgqjyjhw4krqalc3dj38mw5ef2rqfnqcrvdh9ltyp3uzskljcsegg0x3")?;
+        let key_maker = Keys::generate();
         info!(
             "=== Maker pubkey: {}, privatekey: {}",
             key_maker.public_key.to_bech32()?,
@@ -32,6 +32,10 @@ mod tests {
             .place_order(OrderPlaceEventTags::default())
             .await?;
         info!("=== placed order event id: {}", placed_order_event_id);
+        let order = relay_processor_maker.get_events_by_id(placed_order_event_id).await?;
+        info!("=== placed order: {:#?}", order);
+        assert_eq!(order.len(), 1);
+        assert_eq!(order.first().unwrap().kind, MakerOrderKind::get_kind());
 
         let key_taker = Keys::generate();
         let relay_processor_taker = RelayProcessor::try_from_config(
@@ -62,12 +66,21 @@ mod tests {
             order_replies.len(),
             order_replies
         );
+        assert_eq!(order_replies.len(), 1);
+        assert_eq!(order_replies.first().unwrap().kind, TakerOrderKind::get_kind());
 
         let orders_listed = relay_processor_maker.list_orders().await?;
         info!(
             "=== orders listed, amount: {}, orders: {:#?}",
             orders_listed.len(),
             orders_listed
+        );
+        assert!(
+            orders_listed
+                .iter()
+                .map(|x| x.id)
+                .collect::<Vec<EventId>>()
+                .contains(&placed_order_event_id)
         );
 
         Ok(())

@@ -50,7 +50,7 @@ pub fn check_file_existence(path: &str) -> Result<PathBuf, String> {
 }
 
 pub fn get_valid_urls_from_file(filepath: &PathBuf) -> Result<Vec<RelayUrl>, FileError> {
-    let file = std::fs::File::open(filepath).unwrap();
+    let file = std::fs::File::open(filepath).map_err(|x| FileError::ProblemWithFile(x, filepath.clone()))?;
     let reader = std::io::BufReader::new(file);
     let mut set = HashSet::new();
     for x in reader.lines() {
@@ -68,7 +68,7 @@ pub fn get_valid_urls_from_file(filepath: &PathBuf) -> Result<Vec<RelayUrl>, Fil
 }
 
 pub fn get_valid_key_from_file(filepath: &PathBuf) -> Result<Keys, FileError> {
-    let file = std::fs::File::open(filepath).unwrap();
+    let file = std::fs::File::open(filepath).map_err(|x| FileError::ProblemWithFile(x, filepath.clone()))?;
     let reader = std::io::BufReader::new(file);
     let key = reader
         .lines()

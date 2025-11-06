@@ -103,7 +103,7 @@ impl RelayClient {
 
     #[instrument(level = "debug")]
     fn handle_relay_output<T: Debug>(output: Output<T>) -> crate::error::Result<T> {
-        tracing::trace!(output = ?output, "Handling Relay output");
+        tracing::debug!(output = ?output, "Handling Relay output");
         Ok(output.val)
     }
 }

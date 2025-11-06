@@ -57,24 +57,26 @@ enum Command {
 
 #[derive(Debug, Subcommand)]
 enum MakerCommands {
+    #[command(about = "Create order as Maker on Relays specified [authentication required]")]
     CreateOrder {
-        #[arg(short = 's', long, required = false)]
+        #[arg(short = 's', long, default_value = "")]
         asset_to_sell: String,
-        #[arg(short = 'b', long, required = false)]
+        #[arg(short = 'b', long, default_value = "")]
         asset_to_buy: String,
-        #[arg(short = 'p', long, required = false)]
+        #[arg(short = 'p', long, default_value = "0")]
         price: u64,
-        #[arg(short = 'e', long, required = false)]
+        #[arg(short = 'e', long, default_value = "0")]
         expiry: u64,
-        #[arg(short = 'c', long, required = false)]
+        #[arg(short = 'c', long, default_value = "")]
         compiler_name: String,
-        #[arg(short = 'h', long, required = false)]
+        #[arg(short = 's', long, default_value = "")]
         compiler_build_hash: String,
     },
 }
 
 #[derive(Debug, Subcommand)]
 enum TakerCommands {
+    #[command(about = "Reply order as Taker on Relays specified [authentication required]")]
     ReplyOrder {
         #[arg(short = 'i', long)]
         maker_event_id: EventId,
@@ -127,7 +129,7 @@ impl Cli {
                                 compiler_name,
                                 compiler_build_hash,
                             })
-                            .await;
+                            .await?;
                         format!("Creating order result: {res:#?}")
                     }
                 },
@@ -139,20 +141,20 @@ impl Cli {
                     } => {
                         let res = relay_processor
                             .reply_order(maker_event_id, maker_pubkey, OrderReplyEventTags { tx_id })
-                            .await;
+                            .await?;
                         format!("Replying order result: {res:#?}")
                     }
                 },
                 Command::GetOrderReplies { event_id } => {
-                    let res = relay_processor.get_order_replies(event_id).await;
+                    let res = relay_processor.get_order_replies(event_id).await?;
                     format!("Order '{event_id}' replies: {res:#?}")
                 }
                 Command::ListOrders => {
-                    let res = relay_processor.list_orders().await;
+                    let res = relay_processor.list_orders().await?;
                     format!("List of available orders: {res:#?}")
                 }
                 Command::GetEventsById { event_id } => {
-                    let res = relay_processor.get_events_by_id(event_id).await;
+                    let res = relay_processor.get_events_by_id(event_id).await?;
                     format!("List of available events: {res:#?}")
                 }
             }
