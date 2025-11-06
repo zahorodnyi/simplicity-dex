@@ -46,17 +46,21 @@ impl RelayProcessor {
 
     pub async fn reply_order(
         &self,
-        reply_to_event_id: EventId,
-        reply_to_pubkey: PublicKey,
+        maker_event_id: EventId,
+        maker_pubkey: PublicKey,
         tags: OrderReplyEventTags,
     ) -> anyhow::Result<EventId> {
-        let event_id =
-            handlers::reply_order::handle(&self.relay_client, reply_to_event_id, reply_to_pubkey, tags).await?;
+        let event_id = handlers::reply_order::handle(&self.relay_client, maker_event_id, maker_pubkey, tags).await?;
         Ok(event_id)
     }
 
     pub async fn get_order_replies(&self, event_id: EventId) -> anyhow::Result<Events> {
         let events = handlers::order_replies::handle(&self.relay_client, event_id).await?;
+        Ok(events)
+    }
+
+    pub async fn get_events_by_id(&self, event_id: EventId) -> anyhow::Result<Events> {
+        let events = handlers::get_events::ids::handle(&self.relay_client, event_id).await?;
         Ok(events)
     }
 }

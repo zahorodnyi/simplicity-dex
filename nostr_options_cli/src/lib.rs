@@ -1,3 +1,3 @@
-pub mod cli_processor;
+pub mod cli;
 pub mod error;
 mod utils;

@@ -1,14 +1,13 @@
 use clap::Parser;
 use global_utils::logger::init_logger;
-use nostr::prelude::*;
-use nostr_options_cli::cli_processor::Cli;
+use simplicity_dex::cli::Cli;
+use tracing::instrument;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+#[instrument]
+async fn main() -> anyhow::Result<()> {
     let _logger_guard = init_logger();
-
     let cli = Cli::parse();
-    cli.process()?;
-
+    cli.process().await?;
     Ok(())
 }

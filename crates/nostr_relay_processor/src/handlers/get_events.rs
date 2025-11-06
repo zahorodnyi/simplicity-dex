@@ -1,0 +1,22 @@
+pub mod ids {
+    use nostr::{EventId, Filter};
+    use nostr_relay_connector::relay_client::RelayClient;
+    use nostr_sdk::prelude::Events;
+    use std::collections::{BTreeMap, BTreeSet};
+
+    pub async fn handle(client: &RelayClient, event_id: EventId) -> anyhow::Result<Events> {
+        let events = client
+            .req_and_wait(Filter {
+                ids: Some(BTreeSet::from([event_id])),
+                authors: None,
+                kinds: None,
+                search: None,
+                since: None,
+                until: None,
+                limit: None,
+                generic_tags: BTreeMap::default(),
+            })
+            .await?;
+        Ok(events)
+    }
+}

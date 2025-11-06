@@ -4,6 +4,9 @@ use tracing::{level_filters::LevelFilter, trace};
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{EnvFilter, Layer, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
+const ENV_VAR_NAME: &str = "DEX_LOG";
+const DEFAULT_LOG_DIRECTIVE: LevelFilter = LevelFilter::ERROR;
+
 #[derive(Debug)]
 pub struct LoggerGuard {
     _std_out_guard: WorkerGuard,
@@ -17,7 +20,12 @@ pub fn init_logger() -> LoggerGuard {
         .with_writer(std_out_writer)
         .with_target(false)
         .with_level(true)
-        .with_filter(EnvFilter::try_from_default_env().unwrap_or(EnvFilter::new("DEBUG")));
+        .with_filter(
+            EnvFilter::builder()
+                .with_default_directive(DEFAULT_LOG_DIRECTIVE.into())
+                .with_env_var(ENV_VAR_NAME)
+                .from_env_lossy(),
+        );
 
     let std_err_layer = fmt::layer()
         .with_writer(std_err_writer)
