@@ -16,15 +16,17 @@ readme = "README.md"
 [workspace.dependencies]
 anyhow = { version = "1.0.100" }
 clap = { version = "4.5.49", features = ["derive"] }
-dirs = {version = "6.0.0"}
+dcd_manager = { path = "crates/dcd_manager" }
+dirs = { version = "6.0.0" }
 futures-util = { version = "0.3.31" }
 global_utils = { path = "./crates/global_utils" }
 nostr = { version = "0.43.1", features = ["std"] }
 nostr-sdk = { version = "0.43.0" }
-nostr_relay_connector = { path = "./crates/nostr_relay_connector"}
-nostr_relay_processor = { path = "./crates/nostr_relay_processor"}
+nostr_relay_connector = { path = "./crates/nostr_relay_connector" }
+nostr_relay_processor = { path = "./crates/nostr_relay_processor" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145" }
+simplicity-contracts = { git = "https://github.com/BlockstreamResearch/simplicity-contracts", rev = "f775137", package = "contracts" }
 thiserror = { version = "2.0.17" }
 tokio = { version = "1.48.0", features = ["macros", "test-util", "rt", "rt-multi-thread"] }
 tracing = { version = "0.1.41" }

@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = { workspace = true }
+dcd_manager = { workspace = true }
 nostr = { workspace = true }
 global_utils = { workspace = true }
 futures-util = { workspace = true }

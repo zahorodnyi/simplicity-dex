@@ -1,4 +1,5 @@
 use crate::utils::FileError;
+use dcd_manager::error::DcdManagerError;
 use nostr_relay_connector::error::RelayClientError;
 use nostr_relay_processor::error::RelayProcessorError;
 
@@ -14,4 +15,6 @@ pub enum CliError {
     RelayClient(#[from] RelayClientError),
     #[error(transparent)]
     RelayProcessor(#[from] RelayProcessorError),
+    #[error(transparent)]
+    DcdManager(#[from] DcdManagerError),
 }

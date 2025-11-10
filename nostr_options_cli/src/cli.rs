@@ -1,8 +1,10 @@
+use crate::contract_handlers;
 use crate::utils::{
     DEFAULT_CLIENT_TIMEOUT_SECS, check_file_existence, default_key_path, default_relays_path, get_valid_key_from_file,
     get_valid_urls_from_file, write_into_stdout,
 };
 use clap::{Parser, Subcommand};
+use dcd_manager::manager::init::DcdManager;
 use nostr::{EventId, PublicKey};
 use nostr_relay_connector::relay_client::ClientConfig;
 use nostr_relay_processor::relay_processor::{OrderPlaceEventTags, OrderReplyEventTags, RelayProcessor};
@@ -31,6 +33,8 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    #[command(about = "Create test tokens for user to put some collateral values in order [only testing purposes]")]
+    Faucet,
     #[command(about = "Commands collection for the maker role")]
     Maker {
         #[command(subcommand)]
@@ -41,6 +45,12 @@ enum Command {
         #[command(subcommand)]
         action: TakerCommands,
     },
+    #[command(flatten)]
+    Dex(DexCommands),
+}
+
+#[derive(Debug, Subcommand)]
+enum DexCommands {
     #[command(about = "Get replies for a specific order by its ID [no authentication required]")]
     GetOrderReplies {
         #[arg(short = 'i', long)]
@@ -54,11 +64,16 @@ enum Command {
         event_id: EventId,
     },
 }
-
 #[derive(Debug, Subcommand)]
 enum MakerCommands {
-    #[command(about = "Create order as Maker on Relays specified [authentication required]")]
-    CreateOrder {
+    #[command(about = "Responsible for minting three distinct types of tokens. \
+        These tokens represent the claims of the Maker and Taker on the collateral and \
+        settlement assets they have deposited into the contract (used to manage \
+        the contract's lifecycle, including early termination and final settlement)")]
+    InitOrder,
+    #[command(about = "Constructs funding transaction, which transfers appropriate users tokens \
+        onto contract address. Creates order as Maker on Relays specified [authentication required]")]
+    PlaceOrder {
         #[arg(short = 's', long, default_value = "")]
         asset_to_sell: String,
         #[arg(short = 'b', long, default_value = "")]
@@ -72,11 +87,31 @@ enum MakerCommands {
         #[arg(short = 's', long, default_value = "")]
         compiler_build_hash: String,
     },
+    #[command(about = "Allows the Maker to withdraw their collateral from the \
+        Dual Currency Deposit (DCD) contract by returning their grantor collateral tokens")]
+    TerminationCollateral,
+    #[command(about = "Allows the Maker to withdraw their settlement asset from the \
+        Dual Currency Deposit (DCD) contract by returning their grantor settlement tokens")]
+    TerminationSettlement,
+    #[command(about = "Allows the Maker to settle their position at the contract's maturity, \
+        receiving either the collateral or the settlement asset based on an \
+        oracle-provided price")]
+    Settlement,
 }
 
 #[derive(Debug, Subcommand)]
 enum TakerCommands {
-    #[command(about = "Reply order as Taker on Relays specified [authentication required]")]
+    #[command(
+        about = "Allows a Taker to exit the Dual Currency Deposit (DCD) contract before its expiry \
+            by returning their filler tokens in exchange for their original collateral."
+    )]
+    TerminationEarly,
+    #[command(about = "Allows the Taker to settle their position at the contract's maturity, \
+        receiving either the collateral or the settlement asset based on an oracle-provided price")]
+    Settlement,
+    #[command(
+        about = "Funds order with settlement tokens and replies order as Taker on Relays specified [authentication required]"
+    )]
     ReplyOrder {
         #[arg(short = 'i', long)]
         maker_event_id: EventId,
@@ -112,7 +147,7 @@ impl Cli {
         let msg = {
             match self.command {
                 Command::Maker { action } => match action {
-                    MakerCommands::CreateOrder {
+                    MakerCommands::PlaceOrder {
                         asset_to_sell,
                         asset_to_buy,
                         price,
@@ -130,7 +165,23 @@ impl Cli {
                                 compiler_build_hash,
                             })
                             .await?;
-                        format!("Creating order result: {res:#?}")
+                        format!("[Maker] Creating order result: {res:#?}")
+                    }
+                    MakerCommands::InitOrder => {
+                        let tx_res = contract_handlers::maker_init::handle()?;
+                        format!("[Maker] Init order tx result: {tx_res:?}")
+                    }
+                    MakerCommands::TerminationCollateral => {
+                        let tx_res = contract_handlers::maker_termination_collateral::handle()?;
+                        format!("[Maker] Termination collateral tx result: {tx_res:?}")
+                    }
+                    MakerCommands::TerminationSettlement => {
+                        let tx_res = contract_handlers::maker_termination_settlement::handle()?;
+                        format!("[Maker] Termination settlement tx result: {tx_res:?}")
+                    }
+                    MakerCommands::Settlement => {
+                        let tx_res = contract_handlers::maker_settlement::handle()?;
+                        format!("[Maker] Final settlement tx result: {tx_res:?}")
                     }
                 },
                 Command::Taker { action } => match action {
@@ -139,24 +190,39 @@ impl Cli {
                         maker_pubkey,
                         tx_id,
                     } => {
+                        let tx_res = contract_handlers::taker_funding::handle()?;
                         let res = relay_processor
                             .reply_order(maker_event_id, maker_pubkey, OrderReplyEventTags { tx_id })
                             .await?;
-                        format!("Replying order result: {res:#?}")
+                        format!("[Taker] Tx sending result: {tx_res:?}l\n Replying order result: {res:#?}")
+                    }
+                    TakerCommands::TerminationEarly => {
+                        let tx_res = contract_handlers::taker_early_termination::handle()?;
+                        format!("[Taker] Early termination tx result: {tx_res:?}")
+                    }
+                    TakerCommands::Settlement => {
+                        let tx_res = contract_handlers::taker_settlement::handle()?;
+                        format!("[Taker] Final settlement tx result: {tx_res:?}")
                     }
                 },
-                Command::GetOrderReplies { event_id } => {
-                    let res = relay_processor.get_order_replies(event_id).await?;
-                    format!("Order '{event_id}' replies: {res:#?}")
+                Command::Faucet => {
+                    let tx_res = contract_handlers::faucet::handle()?;
+                    format!("Faucet tx result: {tx_res:?}")
                 }
-                Command::ListOrders => {
-                    let res = relay_processor.list_orders().await?;
-                    format!("List of available orders: {res:#?}")
-                }
-                Command::GetEventsById { event_id } => {
-                    let res = relay_processor.get_events_by_id(event_id).await?;
-                    format!("List of available events: {res:#?}")
-                }
+                Command::Dex(x) => match x {
+                    DexCommands::GetOrderReplies { event_id } => {
+                        let res = relay_processor.get_order_replies(event_id).await?;
+                        format!("Order '{event_id}' replies: {res:#?}")
+                    }
+                    DexCommands::ListOrders => {
+                        let res = relay_processor.list_orders().await?;
+                        format!("List of available orders: {res:#?}")
+                    }
+                    DexCommands::GetEventsById { event_id } => {
+                        let res = relay_processor.get_events_by_id(event_id).await?;
+                        format!("List of available events: {res:#?}")
+                    }
+                },
             }
         };
         write_into_stdout(msg)?;
