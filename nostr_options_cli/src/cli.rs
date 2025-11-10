@@ -1,13 +1,13 @@
-use crate::contract_handlers;
-use crate::utils::{
+use crate::common::{
     DEFAULT_CLIENT_TIMEOUT_SECS, check_file_existence, default_key_path, default_relays_path, get_valid_key_from_file,
     get_valid_urls_from_file, write_into_stdout,
 };
+use crate::contract_handlers;
 use clap::{Parser, Subcommand};
-use dcd_manager::manager::init::DcdManager;
 use nostr::{EventId, PublicKey};
 use nostr_relay_connector::relay_client::ClientConfig;
 use nostr_relay_processor::relay_processor::{OrderPlaceEventTags, OrderReplyEventTags, RelayProcessor};
+use simplicityhl::elements::OutPoint;
 use std::path::PathBuf;
 use std::time::Duration;
 use tracing::instrument;
@@ -33,8 +33,6 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    #[command(about = "Create test tokens for user to put some collateral values in order [only testing purposes]")]
-    Faucet,
     #[command(about = "Commands collection for the maker role")]
     Maker {
         #[command(subcommand)]
@@ -47,6 +45,8 @@ enum Command {
     },
     #[command(flatten)]
     Dex(DexCommands),
+    #[command(flatten)]
+    Helpers(HelperCommands),
 }
 
 #[derive(Debug, Subcommand)]
@@ -64,6 +64,32 @@ enum DexCommands {
         event_id: EventId,
     },
 }
+
+#[derive(Debug, Subcommand)]
+enum HelperCommands {
+    #[command(about = "Display P2PK address, which will be used for testing purposes [only testing purposes]")]
+    Address {
+        #[arg(long = "account-index", default_value = "0")]
+        account_index: u32,
+    },
+    #[command(about = "Create test tokens for user to put some collateral values in order [only testing purposes]")]
+    Faucet,
+    #[command(about = "Splits given utxo into given amount of outs [only testing purposes]")]
+    SplitUtxo {
+        #[arg(long = "split-amount")]
+        split_amount: u64,
+        /// Fee utxo
+        #[arg(long = "fee-utxo")]
+        fee_utxo: OutPoint,
+        #[arg(long = "fee-amount")]
+        fee_amount: u64,
+        #[arg(long = "account-index", default_value = "0")]
+        account_index: u32,
+        #[arg(long = "broadcast", default_value = "true")]
+        broadcast: bool,
+    },
+}
+
 #[derive(Debug, Subcommand)]
 enum MakerCommands {
     #[command(about = "Responsible for minting three distinct types of tokens. \
@@ -109,10 +135,17 @@ enum TakerCommands {
     #[command(about = "Allows the Taker to settle their position at the contract's maturity, \
         receiving either the collateral or the settlement asset based on an oracle-provided price")]
     Settlement,
-    #[command(
-        about = "Funds order with settlement tokens and replies order as Taker on Relays specified [authentication required]"
-    )]
+    #[command(about = "Replies order as Taker on Relays specified [authentication required]")]
     ReplyOrder {
+        #[arg(short = 'i', long)]
+        maker_event_id: EventId,
+        #[arg(short = 'p', long, help = " Pubkey in bech32 or hex format")]
+        maker_pubkey: PublicKey,
+        #[arg(short = 't', long, help = "Txid from funding transaction step", required = false)]
+        tx_id: String,
+    },
+    #[command(about = "Funds order with settlement tokens [authentication required]")]
+    FundOrder {
         #[arg(short = 'i', long)]
         maker_event_id: EventId,
         #[arg(short = 'p', long, help = " Pubkey in bech32 or hex format")]
@@ -191,10 +224,17 @@ impl Cli {
                         tx_id,
                     } => {
                         let tx_res = contract_handlers::taker_funding::handle()?;
+                        format!("[Taker] Tx sending result: {tx_res:?}")
+                    }
+                    TakerCommands::FundOrder {
+                        maker_event_id,
+                        maker_pubkey,
+                        tx_id,
+                    } => {
                         let res = relay_processor
                             .reply_order(maker_event_id, maker_pubkey, OrderReplyEventTags { tx_id })
                             .await?;
-                        format!("[Taker] Tx sending result: {tx_res:?}l\n Replying order result: {res:#?}")
+                        format!("[Taker] Replying order result: {res:#?}")
                     }
                     TakerCommands::TerminationEarly => {
                         let tx_res = contract_handlers::taker_early_termination::handle()?;
@@ -205,10 +245,32 @@ impl Cli {
                         format!("[Taker] Final settlement tx result: {tx_res:?}")
                     }
                 },
-                Command::Faucet => {
-                    let tx_res = contract_handlers::faucet::handle()?;
-                    format!("Faucet tx result: {tx_res:?}")
-                }
+                Command::Helpers(x) => match x {
+                    HelperCommands::Faucet => {
+                        let tx_res = contract_handlers::faucet::handle()?;
+                        format!("Faucet tx result: {tx_res:?}")
+                    }
+                    HelperCommands::SplitUtxo {
+                        split_amount,
+                        fee_utxo,
+                        fee_amount,
+                        account_index,
+                        broadcast,
+                    } => {
+                        let tx_res = contract_handlers::split_utxo::handle(
+                            account_index,
+                            split_amount,
+                            fee_utxo,
+                            fee_amount,
+                            broadcast,
+                        )?;
+                        format!("Split utxo result tx_id: {tx_res:?}")
+                    }
+                    HelperCommands::Address { account_index: index } => {
+                        let (x_only_pubkey, addr) = contract_handlers::address::handle(index)?;
+                        format!("X Only Public Key: '{}', P2PK Address: '{}'", x_only_pubkey, addr)
+                    }
+                },
                 Command::Dex(x) => match x {
                     DexCommands::GetOrderReplies { event_id } => {
                         let res = relay_processor.get_order_replies(event_id).await?;

@@ -1,4 +1,5 @@
 use nostr::{Keys, RelayUrl};
+use simplicityhl_core::broadcast_tx;
 use std::collections::HashSet;
 use std::io::BufRead;
 use std::str::FromStr;
@@ -77,4 +78,8 @@ pub fn get_valid_key_from_file(filepath: &PathBuf) -> Result<Keys, FileError> {
         .map_err(|x| FileError::ProblemWithFile(x, filepath.clone()))?;
     let key = Keys::from_str(&key).map_err(|e| FileError::KeyParseError(e, key))?;
     Ok(key)
+}
+
+pub fn broadcast_tx_inner(tx: &simplicityhl::elements::Transaction) -> crate::error::Result<String> {
+    broadcast_tx(tx).map_err(|err| crate::error::CliError::Broadcast(err.to_string()))
 }

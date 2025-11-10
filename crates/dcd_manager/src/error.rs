@@ -1,11 +1,14 @@
+use simplicityhl::elements;
+use simplicityhl::elements::VerificationError;
+
 #[derive(thiserror::Error, Debug)]
 pub enum DcdManagerError {
-    // #[error(transparent)]
-    // RelayClient(#[from] RelayClientError),
-    // #[error("Signer error: {0}")]
-    // Signer(#[from] SignerError),
-    // #[error("Single letter error: {0}")]
-    // SingleLetterTag(#[from] SingleLetterTagError),
+    #[error("Occurred error, msg: {0}")]
+    Internal(String),
+    #[error("Verification error: '{0}'")]
+    VerificationError(#[from] VerificationError),
+    #[error("Verification error: '{0}'")]
+    PSetError(#[from] elements::pset::Error),
 }
 
 pub type Result<T> = std::result::Result<T, DcdManagerError>;

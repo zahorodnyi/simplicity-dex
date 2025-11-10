@@ -4,6 +4,7 @@ pub(crate) mod maker_init;
 pub(crate) mod maker_settlement;
 pub(crate) mod maker_termination_collateral;
 pub(crate) mod maker_termination_settlement;
+pub(crate) mod split_utxo;
 pub(crate) mod taker_funding;
 pub(crate) mod taker_settlement;
 pub(crate) mod taker_termination_early;
