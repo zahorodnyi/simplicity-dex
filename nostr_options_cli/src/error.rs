@@ -1,4 +1,5 @@
 use crate::common::FileError;
+use crate::common::store::SledError;
 use config::ConfigError;
 use nostr_relay_connector::error::RelayClientError;
 use nostr_relay_processor::error::RelayProcessorError;
@@ -27,4 +28,8 @@ pub enum CliError {
     Broadcast(String),
     #[error("Failed to obtain P2PK address, err: '{0}'")]
     P2pkAddress(String),
+    #[error(transparent)]
+    SledError(#[from] SledError),
+    #[error("Asset name already exists, name: '{name}'")]
+    AssetNameExists { name: String },
 }

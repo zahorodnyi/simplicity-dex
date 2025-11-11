@@ -1,4 +1,4 @@
-use crate::manager::common::obtain_utxo_value;
+use crate::manager::common::{derive_public_blinder_key, obtain_utxo_value};
 use crate::manager::types::AssetEntropy;
 use anyhow::bail;
 use simplicity::bitcoin::secp256k1::Keypair;
@@ -31,7 +31,7 @@ pub fn handle(
         bail!("Fee exceeds fee input, fee_amount: {fee_amount}, total_input_fee: {fee_utxo_value}")
     }
 
-    let blinding_key = secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &SecretKey::from_slice(&[1; 32])?);
+    let blinding_key = derive_public_blinder_key()?;
 
     let asset_entropy = get_random_seed();
 

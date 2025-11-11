@@ -1,6 +1,7 @@
 use crate::common::broadcast_tx_inner;
 use crate::common::keys::derive_secret_key_from_index;
 use crate::common::settings::Settings;
+use crate::common::store::Store;
 use dcd_manager::manager::init::DcdManager;
 use elements::bitcoin::hex::DisplayHex;
 use elements::bitcoin::secp256k1;
@@ -17,6 +18,12 @@ pub fn handle(
     issue_amount: u64,
     broadcast: bool,
 ) -> crate::error::Result<()> {
+    let store = Store::load()?;
+
+    if store.is_exist(&asset_name)? {
+        return Err(crate::error::CliError::AssetNameExists { name: asset_name });
+    };
+
     let settings = Settings::load().map_err(|err| crate::error::CliError::EnvNotSet(err.to_string()))?;
     let keypair = secp256k1::Keypair::from_secret_key(
         secp256k1::SECP256K1,
@@ -34,7 +41,8 @@ pub fn handle(
     )
     .map_err(|err| crate::error::CliError::DcdManager(err.to_string()))?;
 
-    //todo: add token to cache
+    store.insert_value(asset_name, token_asset_entropy.as_bytes())?;
+
     match broadcast {
         true => println!("Broadcasted txid: {}", broadcast_tx_inner(&transaction)?),
         false => println!("{}", transaction.serialize().to_lower_hex_string()),
