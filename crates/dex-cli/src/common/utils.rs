@@ -1,8 +1,17 @@
+use elements::hex::ToHex;
+use elements::secp256k1_zkp::PublicKey;
+use hex::FromHex;
 use nostr::{Keys, RelayUrl};
+use simplicity::bitcoin::secp256k1;
+use simplicity::bitcoin::secp256k1::SecretKey;
+use simplicityhl::elements::AssetId;
+use simplicityhl_core::broadcast_tx;
 use std::collections::HashSet;
+use std::fmt::Debug;
 use std::io::BufRead;
 use std::str::FromStr;
 use std::{io::Write, path::PathBuf};
+use tracing::instrument;
 
 const DEFAULT_RELAYS_FILEPATH: &str = ".simplicity-dex/relays.txt";
 const DEFAULT_KEY_PATH: &str = ".simplicity-dex/keypair.txt";
@@ -16,13 +25,13 @@ pub fn write_into_stdout<T: AsRef<str> + std::fmt::Debug>(text: T) -> std::io::R
 
 pub fn default_key_path() -> PathBuf {
     dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("../../.."))
+        .unwrap_or_else(|| PathBuf::from("."))
         .join(DEFAULT_KEY_PATH)
 }
 
 pub fn default_relays_path() -> PathBuf {
     dirs::home_dir()
-        .unwrap_or_else(|| PathBuf::from("../../.."))
+        .unwrap_or_else(|| PathBuf::from("."))
         .join(DEFAULT_RELAYS_FILEPATH)
 }
 #[derive(Debug, thiserror::Error)]
@@ -77,4 +86,55 @@ pub fn get_valid_key_from_file(filepath: &PathBuf) -> Result<Keys, FileError> {
         .map_err(|x| FileError::ProblemWithFile(x, filepath.clone()))?;
     let key = Keys::from_str(&key).map_err(|e| FileError::KeyParseError(e, key))?;
     Ok(key)
+}
+
+pub fn broadcast_tx_inner(tx: &simplicityhl::elements::Transaction) -> crate::error::Result<String> {
+    broadcast_tx(tx).map_err(|err| crate::error::CliError::Broadcast(err.to_string()))
+}
+
+pub fn decode_hex(str: impl AsRef<[u8]>) -> crate::error::Result<Vec<u8>> {
+    let str_to_convert = str.as_ref();
+    Ok(hex::decode(str_to_convert).map_err(|err| crate::error::CliError::FromHex(err, str_to_convert.to_hex()))?)
+}
+
+#[instrument(err)]
+pub fn vec_to_arr<const N: usize, T: Debug>(vec: Vec<T>) -> crate::error::Result<[T; N]> {
+    if vec.len() < N {
+        return Err(crate::error::CliError::InvalidElementsSize {
+            got: vec.len(),
+            expected: N,
+        });
+    }
+    let arr: [T; N] = vec
+        .into_iter()
+        .take(N)
+        .collect::<Vec<_>>()
+        .try_into()
+        .map_err(|e| crate::error::CliError::Custom(format!("Failed to remove elements from '{:?}'", e)))?;
+
+    Ok(arr)
+}
+
+pub const PUBLIC_SECRET_KEY: [u8; 32] = [2; 32];
+
+#[inline]
+pub fn derive_public_oracle_keypair() -> crate::error::Result<secp256k1::Keypair> {
+    let blinder_key =
+        secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &SecretKey::from_slice(&PUBLIC_SECRET_KEY)?);
+    Ok(blinder_key)
+}
+
+#[inline]
+pub fn derive_oracle_pubkey() -> crate::error::Result<PublicKey> {
+    Ok(derive_public_oracle_keypair()?.public_key())
+}
+
+pub fn entropy_to_asset_id(el: impl AsRef<[u8]>) -> crate::error::Result<AssetId> {
+    use simplicity::hashes::sha256;
+    let el = el.as_ref();
+    let mut asset_entropy_bytes =
+        <[u8; 32]>::from_hex(el).map_err(|err| crate::error::CliError::FromHex(err, el.to_hex()))?;
+    asset_entropy_bytes.reverse();
+    let midstate = sha256::Midstate::from_byte_array(asset_entropy_bytes);
+    Ok(AssetId::from_entropy(midstate))
 }

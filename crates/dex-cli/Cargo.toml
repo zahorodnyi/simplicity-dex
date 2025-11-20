@@ -10,18 +10,29 @@ publish = false
 
 [[bin]]
 name = "simplicity-dex"
-path = "src/main.rs"
+path = "src/bin/main.rs"
 
 [dependencies]
 anyhow = { workspace = true }
-nostr = { workspace = true }
-global-utils = { workspace = true }
-futures-util = { workspace = true }
-serde_json = { workspace = true }
-tokio = { workspace = true }
+bincode = { workspace = true }
 clap = { workspace = true }
+config = { workspace = true }
 dirs = { workspace = true }
-tracing = { workspace = true }
+dotenvy = { workspace = true }
+elements = { workspace = true }
+futures-util = { workspace = true }
+global-utils = { workspace = true }
+hex = { workspace = true }
+nostr = { workspace = true }
+serde_json = { workspace = true }
+simplicity-lang = { workspace = true }
+simplicity-contracts-adapter = { workspace = true }
+simplicity-contracts = { workspace = true }
+simplicityhl = { workspace = true }
+simplicityhl-core = { workspace = true }
+sled = { workspace = true }
 thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
 dex-nostr-relay = { workspace = true }
 

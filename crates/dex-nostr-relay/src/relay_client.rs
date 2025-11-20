@@ -109,7 +109,6 @@ impl RelayClient {
     #[instrument(skip_all, level = "debug", ret)]
     pub async fn disconnect(&self) -> crate::error::Result<()> {
         self.client.disconnect().await;
-
         Ok(())
     }
 
