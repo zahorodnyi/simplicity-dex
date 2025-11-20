@@ -74,7 +74,7 @@ pub fn process_args(
     dcd_init_params: InnerDcdInitParams,
     fee_utxos: Vec<OutPoint>,
 ) -> crate::error::Result<ProcessedArgs> {
-    let store = Store::load()?;
+    let _store = Store::load()?;
 
     const FEE_UTXOS_NEEDED: usize = 3;
 
@@ -159,7 +159,7 @@ pub fn save_args_to_cache(
         taproot_pubkey,
     }: ArgsToSave,
 ) -> crate::error::Result<()> {
-    let store = Store::load()?;
+    let _store = Store::load()?;
 
     Ok(())
 }

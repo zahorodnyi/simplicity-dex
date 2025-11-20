@@ -71,7 +71,7 @@ pub fn process_args(
 ) -> crate::error::Result<ProcessedArgs> {
     const FEE_UTXOS_NEEDED: usize = 5;
 
-    let store = Store::load()?;
+    let _store = Store::load()?;
 
     let settings = Settings::load().map_err(|err| crate::error::CliError::EnvNotSet(err.to_string()))?;
 
@@ -100,13 +100,6 @@ pub fn process_args(
         settlement_asset_utxo: fee_utxos[3],
         fee_utxo: fee_utxos[4],
     })
-}
-
-fn convert_hex_be_to_le(hex_str: impl AsRef<[u8]>) -> crate::error::Result<AssetEntropyHex> {
-    let hex_str = hex_str.as_ref();
-    let mut bytes = hex::decode(hex_str).map_err(|err| crate::error::CliError::FromHex(err, hex_str.to_hex()))?;
-    bytes.reverse();
-    Ok(bytes.to_hex())
 }
 
 #[instrument(level = "debug", skip_all, err)]
@@ -177,8 +170,8 @@ pub fn handle(
     Ok(transaction.txid())
 }
 
-pub fn save_args_to_cache() -> crate::error::Result<()> {
-    let store = Store::load()?;
+pub fn _save_args_to_cache() -> crate::error::Result<()> {
+    let _store = Store::load()?;
     //todo: move store to cli function
     Ok(())
 }

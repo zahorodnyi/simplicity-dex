@@ -34,7 +34,7 @@ pub fn process_args(
 ) -> crate::error::Result<ProcessedArgs> {
     const FEE_UTXOS_NEEDED: usize = 2;
 
-    let store = Store::load()?;
+    let _store = Store::load()?;
 
     let settings = Settings::load().map_err(|err| crate::error::CliError::EnvNotSet(err.to_string()))?;
 
@@ -113,8 +113,8 @@ pub fn handle(
     Ok(transaction.txid())
 }
 
-pub fn save_args_to_cache() -> crate::error::Result<()> {
-    let store = Store::load()?;
+pub fn _save_args_to_cache() -> crate::error::Result<()> {
+    let _store = Store::load()?;
     //todo: move store to cli function
     Ok(())
 }

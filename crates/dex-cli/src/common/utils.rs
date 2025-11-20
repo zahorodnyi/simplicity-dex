@@ -1,15 +1,11 @@
 use elements::hex::ToHex;
 use elements::secp256k1_zkp::PublicKey;
 use hex::FromHex;
-use nostr::{Keys, RelayUrl};
 use simplicity::bitcoin::secp256k1;
 use simplicity::bitcoin::secp256k1::SecretKey;
 use simplicityhl::elements::AssetId;
 use simplicityhl_core::broadcast_tx;
-use std::collections::HashSet;
 use std::fmt::Debug;
-use std::io::BufRead;
-use std::str::FromStr;
 use std::{io::Write, path::PathBuf};
 use tracing::instrument;
 
@@ -56,36 +52,6 @@ pub fn check_file_existence(path: &str) -> Result<PathBuf, String> {
     } else {
         Err(FileError::IncorrectPathToFile(path.clone()).to_string())
     }
-}
-
-pub fn get_valid_urls_from_file(filepath: &PathBuf) -> Result<Vec<RelayUrl>, FileError> {
-    let file = std::fs::File::open(filepath).map_err(|x| FileError::ProblemWithFile(x, filepath.clone()))?;
-    let reader = std::io::BufReader::new(file);
-    let mut set = HashSet::new();
-    for x in reader.lines() {
-        let line = x.map_err(|x| FileError::ProblemWithFile(x, filepath.clone()))?;
-        match RelayUrl::parse(&line) {
-            Ok(url) => {
-                set.insert(url);
-            }
-            Err(e) => {
-                return Err(FileError::UrlParseError(e, line));
-            }
-        }
-    }
-    Ok(set.into_iter().collect::<Vec<RelayUrl>>())
-}
-
-pub fn get_valid_key_from_file(filepath: &PathBuf) -> Result<Keys, FileError> {
-    let file = std::fs::File::open(filepath).map_err(|x| FileError::ProblemWithFile(x, filepath.clone()))?;
-    let reader = std::io::BufReader::new(file);
-    let key = reader
-        .lines()
-        .next()
-        .ok_or_else(|| FileError::EmptyFile(filepath.clone()))?
-        .map_err(|x| FileError::ProblemWithFile(x, filepath.clone()))?;
-    let key = Keys::from_str(&key).map_err(|e| FileError::KeyParseError(e, key))?;
-    Ok(key)
 }
 
 pub fn broadcast_tx_inner(tx: &simplicityhl::elements::Transaction) -> crate::error::Result<String> {

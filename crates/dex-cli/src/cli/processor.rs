@@ -1,13 +1,15 @@
 use crate::cli::helper::HelperCommands;
 use crate::cli::{DexCommands, MakerCommands, TakerCommands};
+use crate::common::config::{AggregatedConfig, CliConfigArgs, KeysWrapper};
 use crate::common::{
-    DEFAULT_CLIENT_TIMEOUT_SECS, check_file_existence, default_key_path, default_relays_path, get_valid_key_from_file,
-    get_valid_urls_from_file, write_into_stdout,
+    check_file_existence, write_into_stdout,
+    DEFAULT_CLIENT_TIMEOUT_SECS,
 };
 use crate::contract_handlers;
 use clap::{Parser, Subcommand};
 use dex_nostr_relay::relay_client::ClientConfig;
 use dex_nostr_relay::relay_processor::RelayProcessor;
+use nostr::{Keys, RelayUrl};
 use simplicityhl::elements::Txid;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -22,13 +24,20 @@ pub struct Cli {
         help = "Specify private key for posting authorized events on Nostr Relay",
         value_parser = check_file_existence
     )]
-    key_path: Option<PathBuf>,
+    nostr_key: Option<KeysWrapper>,
     #[arg(
         short = 'r',
+        long,
+        help = "Specify private key for posting authorized events on Nostr Relay",
+        value_parser = check_file_existence
+    )]
+    relays_list: Option<Vec<RelayUrl>>,
+    #[arg(
+        short = 'c',
         long, help = "Specify file with list of relays to use",
         value_parser = check_file_existence
     )]
-    relays_path: Option<PathBuf>,
+    nostr_config_path: Option<PathBuf>,
     #[command(subcommand)]
     command: Command,
 }
@@ -49,23 +58,36 @@ pub enum Command {
     Dex(DexCommands),
     #[command(flatten)]
     Helpers(HelperCommands),
+    #[command()]
+    TestShow,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum TestCommands {
+    #[command()]
+    TestShow,
 }
 
 impl Cli {
-    pub async fn init_relays(&self) -> crate::error::Result<RelayProcessor> {
-        let keys = {
-            match get_valid_key_from_file(&self.key_path.clone().unwrap_or(default_key_path())) {
-                Ok(keys) => Some(keys),
-                Err(err) => {
-                    tracing::warn!("Failed to parse key, {err}");
-                    None
-                }
-            }
-        };
-        let relays_urls = get_valid_urls_from_file(&self.relays_path.clone().unwrap_or(default_relays_path()))?;
+    pub fn init_config(&self) -> crate::error::Result<AggregatedConfig> {
+        let nostr_key = self.nostr_key.clone();
+        let relays_list = self.relays_list.clone();
+        let nostr_config_path = self.nostr_config_path.clone();
+        AggregatedConfig::new(CliConfigArgs {
+            nostr_key,
+            relays_list,
+            nostr_config_path,
+        })
+    }
+
+    pub async fn init_relays(
+        &self,
+        relays: &[RelayUrl],
+        keypair: Option<Keys>,
+    ) -> crate::error::Result<RelayProcessor> {
         let relay_processor = RelayProcessor::try_from_config(
-            relays_urls,
-            keys,
+            relays,
+            keypair,
             ClientConfig {
                 timeout: Duration::from_secs(DEFAULT_CLIENT_TIMEOUT_SECS),
             },
@@ -76,9 +98,15 @@ impl Cli {
 
     #[instrument(skip(self))]
     pub async fn process(self) -> crate::error::Result<()> {
-        let relay_processor = self.init_relays().await?;
+        let agg_config = self.init_config()?;
+        let relay_processor = self
+            .init_relays(&agg_config.relays, agg_config.nostr_keypair.clone())
+            .await?;
         let msg = {
             match self.command {
+                Command::TestShow => {
+                    format!("config: {agg_config:#?}")
+                }
                 Command::Maker { action } => match action {
                     MakerCommands::InitOrder {
                         fee_utxos,

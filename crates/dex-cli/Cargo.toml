@@ -17,6 +17,7 @@ anyhow = { workspace = true }
 bincode = { workspace = true }
 clap = { workspace = true }
 config = { workspace = true }
+dex-nostr-relay = { workspace = true }
 dirs = { workspace = true }
 dotenvy = { workspace = true }
 elements = { workspace = true }
@@ -25,14 +26,14 @@ global-utils = { workspace = true }
 hex = { workspace = true }
 nostr = { workspace = true }
 serde_json = { workspace = true }
-simplicity-lang = { workspace = true }
-simplicity-contracts-adapter = { workspace = true }
 simplicity-contracts = { workspace = true }
+simplicity-contracts-adapter = { workspace = true }
+simplicity-lang = { workspace = true }
 simplicityhl = { workspace = true }
 simplicityhl-core = { workspace = true }
 sled = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
-dex-nostr-relay = { workspace = true }
+serde = { version = "1.0.228", features = ["derive"] }
 

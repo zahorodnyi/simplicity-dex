@@ -18,6 +18,8 @@ pub enum CliError {
     DcdManager(String),
     #[error("Configuration error, err: '{0}'")]
     Config(#[from] ConfigError),
+    #[error("Configuration error, err: '{0}'")]
+    ConfigExtended(String),
     #[error("Failed to obtain utxo, '{0}'")]
     Utxo(String),
     #[error("'{0}', not set in environment or .env")]
