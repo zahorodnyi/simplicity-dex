@@ -3,13 +3,13 @@ use simplicity::elements::OutPoint;
 
 #[derive(Debug, Subcommand)]
 pub enum HelperCommands {
-    #[command(about = "Display P2PK address, which will be used for testing purposes [only testing purposes]")]
+    #[command(about = "Display a test P2PK address for the given account index [testing only]")]
     Address {
         /// Account index to use for change address
         #[arg(long = "account-index", default_value_t = 0)]
         account_index: u32,
     },
-    #[command(about = "Create test tokens for user to put some collateral values in order [only testing purposes]")]
+    #[command(about = "Issue new test tokens backed by LBTC for settlement testing [testing only]")]
     Faucet {
         /// Transaction id (hex) and output index (vout) of the LBTC UTXO used to pay fees and issue the asset
         #[arg(long = "fee-utxo")]
@@ -30,7 +30,7 @@ pub enum HelperCommands {
         #[arg(long = "broadcast", default_value_t = true)]
         broadcast: bool,
     },
-    #[command(about = "Mint already created test tokens from already saved asset [only testing purposes]")]
+    #[command(about = "Reissue additional units of an already created test asset [testing only]")]
     MintTokens {
         /// Transaction id (hex) and output index (vout) of the REISSUANCE ASSET UTXO you will spend
         #[arg(long = "reissue-asset-utxo")]
@@ -54,7 +54,7 @@ pub enum HelperCommands {
         #[arg(long = "broadcast", default_value_t = true)]
         broadcast: bool,
     },
-    #[command(about = "Splits given utxo into given amount of outs [only testing purposes]")]
+    #[command(about = "Split a single LBTC UTXO into three outputs of equal value [testing only]")]
     SplitNativeThree {
         #[arg(long = "split-amount")]
         split_amount: u64,

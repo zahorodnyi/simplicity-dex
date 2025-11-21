@@ -61,13 +61,12 @@ impl AggregatedConfig {
         } = cli_args;
 
         let _ = dotenvy::dotenv();
-        let mut config_builder =
-            Config::builder().add_source(
-                Environment::default()
-                    .list_separator(ENV_VARIABLE_SEPARATOR)
-                    .with_list_parse_key(ENV_VARIABLE_SEPARATOR)
-                    .try_parsing(true)
-            );
+        let mut config_builder = Config::builder().add_source(
+            Environment::default()
+                .list_separator(ENV_VARIABLE_SEPARATOR)
+                .with_list_parse_key(ENV_VARIABLE_SEPARATOR)
+                .try_parsing(true),
+        );
 
         // Add default config path
         if let Ok(path) = check_file_existence(DEFAULT_CONFIG_PATH) {
@@ -110,7 +109,9 @@ impl AggregatedConfig {
 
         if config.relays.is_none() {
             return Err(ConfigExtended("No relays found in configuration..".to_string()));
-        } else if let Some(x) = config.relays.as_ref() && x.is_empty(){
+        } else if let Some(x) = config.relays.as_ref()
+            && x.is_empty()
+        {
             return Err(ConfigExtended("Relays configuration is empty..".to_string()));
         }
 

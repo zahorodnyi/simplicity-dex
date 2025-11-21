@@ -4,26 +4,28 @@ use simplicity::elements::OutPoint;
 
 #[derive(Debug, Subcommand)]
 pub enum TakerCommands {
-    #[command(about = "Replies order as Taker on Relays specified [authentication required]")]
+    #[command(
+        about = "Fund an existing DCD order as Taker and lock collateral into the contract [authentication required]"
+    )]
     FundOrder {
-        /// Expects only 5 utxos in this order (filler_token, grantor_collateral_token, grantor_settlement_token, settlement_asset, fee_utxo)
+        /// UTXOs providing filler tokens, collateral, settlement asset, and fees (exactly 5 expected)
         #[arg(long = "fee-utxos", value_delimiter = ',')]
         fee_utxos: Vec<OutPoint>,
-        /// Fee amount
+        /// Miner fee in satoshis (LBTC) for the Taker funding transaction
         #[arg(long = "fee-amount", default_value_t = 1500)]
         fee_amount: u64,
-        /// collateral_amount_to_deposit
+        /// Amount of collateral (in satoshis) that the Taker will lock into the DCD contract
         #[arg(long = "coll-amount-deposit")]
         collateral_amount_to_deposit: u64,
-        /// Storage taproot pubkey gen
+        /// Taproot internal pubkey (hex) used to derive the contract output address
         #[arg(long = "taproot-pubkey-gen")]
         dcd_taproot_pubkey_gen: String,
         #[command(flatten)]
         dcd_arguments: Option<DCDCliArguments>,
-        /// Account index to use for change address
+        /// Account index used to derive internal/change addresses from the wallet
         #[arg(long = "account-index", default_value_t = 0)]
         account_index: u32,
-        /// When set, broadcast the built transaction via Esplora and print txid
+        /// When true, broadcast the built transaction via Esplora; otherwise only print it
         #[arg(long = "broadcast", default_value_t = true)]
         broadcast: bool,
         // #[arg(short = 'i', long)]
@@ -34,58 +36,58 @@ pub enum TakerCommands {
         // tx_id: String,
     },
     #[command(
-        about = "Allows a Taker to exit the Dual Currency Deposit (DCD) contract before its expiry \
-            by returning their filler tokens in exchange for their original collateral."
+        about = "Exit the DCD contract early as Taker by returning filler tokens in exchange for your collateral"
     )]
     TerminationEarly {
-        /// Expects only 5 utxos in this order (filler_token, grantor_collateral_token, grantor_settlement_token, settlement_asset, fee_utxo)
+        /// UTXOs providing filler tokens, collateral, settlement asset, and fees (exactly 5 expected)
         #[arg(long = "fee-utxos", value_delimiter = ',')]
         fee_utxos: Vec<OutPoint>,
-        /// Fee amount
+        /// Miner fee in satoshis (LBTC) for the early-termination transaction
         #[arg(long = "fee-amount", default_value_t = 1500)]
         fee_amount: u64,
-        /// collateral_amount_to_deposit
+        /// Amount of filler tokens (in satoshis) that the Taker returns to exit early
         #[arg(long = "filler-to-return")]
         filler_token_amount_to_return: u64,
-        /// Storage taproot pubkey gen
+        /// Taproot internal pubkey (hex) used to derive the contract output address
         #[arg(long = "taproot-pubkey-gen")]
         dcd_taproot_pubkey_gen: String,
         #[command(flatten)]
         dcd_arguments: Option<DCDCliArguments>,
-        /// Account index to use for change address
+        /// Account index used to derive internal/change addresses from the wallet
         #[arg(long = "account-index", default_value_t = 0)]
         account_index: u32,
-        /// When set, broadcast the built transaction via Esplora and print txid
+        /// When true, broadcast the built transaction via Esplora; otherwise only print it
         #[arg(long = "broadcast", default_value_t = true)]
         broadcast: bool,
     },
-    #[command(about = "Allows the Taker to settle their position at the contract's maturity, \
-        receiving either the collateral or the settlement asset based on an oracle-provided price")]
+    #[command(
+        about = "Settle the Taker side of the DCD at maturity using an oracle price to choose collateral or settlement asset"
+    )]
     Settlement {
-        /// Expects only 5 utxos in this order (filler_token, grantor_collateral_token, grantor_settlement_token, settlement_asset, fee_utxo)
+        /// UTXOs providing filler tokens, collateral, settlement asset, and fees (exactly 5 expected)
         #[arg(long = "fee-utxos", value_delimiter = ',')]
         fee_utxos: Vec<OutPoint>,
-        /// Fee amount
+        /// Miner fee in satoshis (LBTC) for the final Taker settlement transaction
         #[arg(long = "fee-amount", default_value_t = 1500)]
         fee_amount: u64,
-        /// filler_amount_to_burn
+        /// Amount of filler tokens (in satoshis) that the Taker burns during settlement
         #[arg(long = "filler-to-burn")]
         filler_amount_to_burn: u64,
-        /// price_at_current_block_height
+        /// Oracle price at current block height used for settlement decision
         #[arg(long = "price-now")]
         price_at_current_block_height: u64,
-        /// Oracle signature
+        /// Schnorr/ecdsa signature produced by the oracle over the published price
         #[arg(long = "oracle-sign")]
         oracle_signature: String,
-        /// Storage taproot pubkey gen
+        /// Taproot internal pubkey (hex) used to derive the contract output address
         #[arg(long = "taproot-pubkey-gen")]
         dcd_taproot_pubkey_gen: String,
         #[command(flatten)]
         dcd_arguments: Option<DCDCliArguments>,
-        /// Account index to use for change address
+        /// Account index used to derive internal/change addresses from the wallet
         #[arg(long = "account-index", default_value_t = 0)]
         account_index: u32,
-        /// When set, broadcast the built transaction via Esplora and print txid
+        /// When true, broadcast the built transaction via Esplora; otherwise only print it
         #[arg(long = "broadcast", default_value_t = true)]
         broadcast: bool,
     },

@@ -3,19 +3,19 @@ use nostr::EventId;
 
 #[derive(Debug, Subcommand)]
 pub enum DexCommands {
-    #[command(about = "Get replies for a specific order by its ID [no authentication required]")]
+    #[command(about = "Fetch replies for a specific order event from Nostr relays [no authentication required]")]
     GetOrderReplies {
         #[arg(short = 'i', long)]
         event_id: EventId,
     },
-    #[command(about = "List available orders from relays [no authentication required]")]
+    #[command(about = "List all currently available orders discovered on Nostr relays [no authentication required]")]
     ListOrders,
-    #[command(about = "Get events by its ID [no authentication required]")]
+    #[command(about = "Fetch an arbitrary Nostr event by its ID [no authentication required]")]
     GetEventsById {
         #[arg(short = 'i', long)]
         event_id: EventId,
     },
-    #[command(about = "Get order by its ID [no authentication required]")]
+    #[command(about = "Fetch a single order by its event ID from Nostr relays [no authentication required]")]
     GetOrderById {
         #[arg(short = 'i', long)]
         event_id: EventId,

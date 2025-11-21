@@ -1,10 +1,7 @@
 use crate::cli::helper::HelperCommands;
 use crate::cli::{DexCommands, MakerCommands, TakerCommands};
 use crate::common::config::{AggregatedConfig, CliConfigArgs, KeysWrapper};
-use crate::common::{
-    check_file_existence, write_into_stdout,
-    DEFAULT_CLIENT_TIMEOUT_SECS,
-};
+use crate::common::{DEFAULT_CLIENT_TIMEOUT_SECS, check_file_existence, write_into_stdout};
 use crate::contract_handlers;
 use clap::{Parser, Subcommand};
 use dex_nostr_relay::relay_client::ClientConfig;
@@ -21,18 +18,20 @@ pub struct Cli {
     #[arg(
         short = 'k',
         long,
-        help = "Specify private key for posting authorized events on Nostr Relay"
+        help = "Private key used to authenticate and sign events on the Nostr relays (hex or bech32)"
     )]
     nostr_key: Option<Keys>,
     #[arg(
         short = 'r',
         long,
-        help = "Specify private key for posting authorized events on Nostr Relay"
+        help = "List of Nostr relay URLs to connect to (e.g. wss://relay.example.com)",
+        value_delimiter = ','
     )]
     relays_list: Option<Vec<RelayUrl>>,
     #[arg(
         short = 'c',
-        long, help = "Specify file with list of relays to use",
+        long,
+        help = "Path to a config file containing the list of relays and(or) nostr keypair to use",
         value_parser = check_file_existence
     )]
     nostr_config_path: Option<PathBuf>,
@@ -42,12 +41,12 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    #[command(about = "Commands collection for the maker role")]
+    #[command(about = "Maker-side commands for creating and managing DCD orders")]
     Maker {
         #[command(subcommand)]
         action: MakerCommands,
     },
-    #[command(about = "Commands collection for the taker role")]
+    #[command(about = "Taker-side commands for funding and managing DCD positions")]
     Taker {
         #[command(subcommand)]
         action: TakerCommands,
@@ -56,14 +55,8 @@ pub enum Command {
     Dex(DexCommands),
     #[command(flatten)]
     Helpers(HelperCommands),
-    #[command()]
-    TestShow,
-}
-
-#[derive(Debug, Subcommand)]
-pub enum TestCommands {
-    #[command()]
-    TestShow,
+    #[command(about = "Print the aggregated CLI and relay configuration")]
+    TestConfigShow,
 }
 
 impl Cli {
@@ -72,7 +65,7 @@ impl Cli {
         let relays_list = self.relays_list.clone();
         let nostr_config_path = self.nostr_config_path.clone();
         AggregatedConfig::new(CliConfigArgs {
-            nostr_key: nostr_key.map(|x|KeysWrapper(x)),
+            nostr_key: nostr_key.map(|x| KeysWrapper(x)),
             relays_list,
             nostr_config_path,
         })
@@ -102,7 +95,7 @@ impl Cli {
             .await?;
         let msg = {
             match self.command {
-                Command::TestShow => {
+                Command::TestConfigShow => {
                     format!("config: {agg_config:#?}")
                 }
                 Command::Maker { action } => match action {

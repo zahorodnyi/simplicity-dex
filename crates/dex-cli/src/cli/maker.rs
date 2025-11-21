@@ -5,128 +5,128 @@ use simplicity::elements::OutPoint;
 #[derive(Debug, Subcommand)]
 pub enum MakerCommands {
     #[command(
-        about = "Responsible for minting three distinct types of tokens. Initializes Maker offer to Taker, which later has to be funded.",
-        long_about = "Responsible for minting three distinct types of tokens. \
-        These tokens represent the claims of the Maker and Taker on the collateral and \
-        settlement assets they have deposited into the contract (used to manage \
-        the contract's lifecycle, including early termination and final settlement)."
+        about = "Mint three DCD token types and create an initial Maker offer for a Taker",
+        long_about = "Mint three distinct DCD token types and initialize a Maker offer. \
+        These tokens represent the Maker/Taker claims on collateral and settlement assets \
+        and are used to manage the contract lifecycle (funding, early termination, settlement)."
     )]
     InitOrder {
-        /// Utxos to construct assets on them
+        /// UTXOs that will fund fees and asset issuance for the DCD tokens
         #[arg(long = "fee-utxos", value_delimiter = ',')]
         fee_utxos: Vec<OutPoint>,
         #[command(flatten)]
         init_order_args: InitOrderArgs,
-        /// Fee amount
+        /// Miner fee in satoshis (LBTC) for the init order transaction
         #[arg(long = "fee-amount", default_value_t = 1500)]
         fee_amount: u64,
-        /// Account index to use for change address
+        /// Account index used to derive internal/change addresses from the wallet
         #[arg(long = "account-index", default_value_t = 0)]
         account_index: u32,
-        /// When set, broadcast the built transaction via Esplora and print txid
+        /// When true, broadcast the built transaction via Esplora; otherwise only print it
         #[arg(long = "broadcast", default_value_t = true)]
         broadcast: bool,
     },
     #[command(
-        about = "Constructs funding transaction, which transfers appropriate users tokens \
-        onto contract address. Creates order as Maker on Relays specified [authentication required]",
+        about = "Fund a DCD offer by locking Maker tokens into the contract and publish the order on relays [authentication required]",
         alias = "fund"
     )]
     Fund {
-        /// Expects only 5 utxos in this order (filler_token, grantor_collateral_token, grantor_settlement_token, settlement_asset, fee_utxo)
+        /// UTXOs providing the DCD tokens, settlement asset, and fees (exactly 5 expected)
         #[arg(long = "fee-utxos", value_delimiter = ',')]
         fee_utxos: Vec<OutPoint>,
-        /// Fee amount
+        /// Miner fee in satoshis (LBTC) for the Maker funding transaction
         #[arg(long = "fee-amount", default_value_t = 1500)]
         fee_amount: u64,
-        /// Storage taproot pubkey gen
+        /// Taproot internal pubkey (hex) used to derive the contract output address
         #[arg(long = "taproot-pubkey-gen")]
         dcd_taproot_pubkey_gen: String,
         #[command(flatten)]
         dcd_arguments: Option<DCDCliMakerFundArguments>,
-        /// Account index to use for change address
+        /// Account index used to derive internal/change addresses from the wallet
         #[arg(long = "account-index", default_value_t = 0)]
         account_index: u32,
-        /// When set, broadcast the built transaction via Esplora and print txid
+        /// When true, broadcast the built transaction via Esplora; otherwise only print it
         #[arg(long = "broadcast", default_value_t = true)]
         broadcast: bool,
     },
-    #[command(about = "Allows the Maker to withdraw their collateral from the \
-        Dual Currency Deposit (DCD) contract by returning their grantor collateral tokens")]
+    #[command(
+        about = "Withdraw Maker collateral early by burning grantor collateral tokens (DCD early termination leg)"
+    )]
     TerminationCollateral {
-        /// Expects only 5 utxos in this order (filler_token, grantor_collateral_token, grantor_settlement_token, settlement_asset, fee_utxo)
+        /// UTXOs providing grantor collateral tokens, settlement asset, and fees (exactly 5 expected)
         #[arg(long = "fee-utxos", value_delimiter = ',')]
         fee_utxos: Vec<OutPoint>,
-        /// Fee amount
+        /// Miner fee in satoshis (LBTC) for the early-termination collateral transaction
         #[arg(long = "fee-amount", default_value_t = 1500)]
         fee_amount: u64,
-        /// Storage taproot pubkey gen
+        /// Taproot internal pubkey (hex) used to derive the contract output address
         #[arg(long = "taproot-pubkey-gen")]
         dcd_taproot_pubkey_gen: String,
-        /// Fee amount
+        /// Amount of grantor collateral tokens (in satoshis) to burn for early termination
         #[arg(long = "grantor-coll-burn")]
         grantor_collateral_amount_to_burn: u64,
         #[command(flatten)]
         dcd_arguments: Option<DCDCliArguments>,
-        /// Account index to use for change address
+        /// Account index used to derive internal/change addresses from the wallet
         #[arg(long = "account-index", default_value_t = 0)]
         account_index: u32,
-        /// When set, broadcast the built transaction via Esplora and print txid
+        /// When true, broadcast the built transaction via Esplora; otherwise only print it
         #[arg(long = "broadcast", default_value_t = true)]
         broadcast: bool,
     },
-    #[command(about = "Allows the Maker to withdraw their settlement asset from the \
-        Dual Currency Deposit (DCD) contract by returning their grantor settlement tokens")]
+    #[command(
+        about = "Withdraw Maker settlement asset early by burning grantor settlement tokens (DCD early termination leg)"
+    )]
     TerminationSettlement {
-        /// Expects only 5 utxos in this order (filler_token, grantor_collateral_token, grantor_settlement_token, settlement_asset, fee_utxo)
+        /// UTXOs providing grantor settlement tokens, settlement asset, and fees (exactly 5 expected)
         #[arg(long = "fee-utxos", value_delimiter = ',')]
         fee_utxos: Vec<OutPoint>,
-        /// Fee amount
+        /// Miner fee in satoshis (LBTC) for the early-termination settlement transaction
         #[arg(long = "fee-amount", default_value_t = 1500)]
         fee_amount: u64,
-        /// Fee amount
+        /// Amount of grantor settlement tokens (in satoshis) to burn for early termination
         #[arg(long = "grantor-settl-burn")]
         grantor_settlement_amount_to_burn: u64,
-        /// Storage taproot pubkey gen
+        /// Taproot internal pubkey (hex) used to derive the contract output address
         #[arg(long = "taproot-pubkey-gen")]
         dcd_taproot_pubkey_gen: String,
         #[command(flatten)]
         dcd_arguments: Option<DCDCliArguments>,
-        /// Account index to use for change address
+        /// Account index used to derive internal/change addresses from the wallet
         #[arg(long = "account-index", default_value_t = 0)]
         account_index: u32,
-        /// When set, broadcast the built transaction via Esplora and print txid
+        /// When true, broadcast the built transaction via Esplora; otherwise only print it
         #[arg(long = "broadcast", default_value_t = true)]
         broadcast: bool,
     },
-    #[command(about = "Allows the Maker to settle their position at the contract's maturity, \
-        receiving either the collateral or the settlement asset based on an \
-        oracle-provided price")]
+    #[command(
+        about = "Settle the Maker side of the DCD at maturity using an oracle price to decide between collateral or settlement asset"
+    )]
     Settlement {
-        /// Expects only 5 utxos in this order (filler_token, grantor_collateral_token, grantor_settlement_token, settlement_asset, fee_utxo)
+        /// UTXOs providing grantor tokens, settlement asset, and fees (exactly 5 expected)
         #[arg(long = "fee-utxos", value_delimiter = ',')]
         fee_utxos: Vec<OutPoint>,
-        /// Fee amount
+        /// Miner fee in satoshis (LBTC) for the final settlement transaction
         #[arg(long = "fee-amount", default_value_t = 1500)]
         fee_amount: u64,
-        /// price_at_current_block_height
+        /// Oracle price at current block height used for settlement decision
         #[arg(long = "grantor-settl-burn")]
         price_at_current_block_height: u64,
-        /// oracle_signature
+        /// Schnorr signature produced by the oracle over the published price
         #[arg(long = "oracle-sign")]
         oracle_signature: String,
-        /// grantor_amount_to_burn
+        /// Amount of grantor tokens (in satoshis) to burn during settlement
         #[arg(long = "grantor-amount-burn")]
         grantor_amount_to_burn: u64,
-        /// Storage taproot pubkey gen
+        /// Taproot internal pubkey (hex) used to derive the contract output address
         #[arg(long = "taproot-pubkey-gen")]
         dcd_taproot_pubkey_gen: String,
         #[command(flatten)]
         dcd_arguments: Option<DCDCliArguments>,
-        /// Account index to use for change address
+        /// Account index used to derive internal/change addresses from the wallet
         #[arg(long = "account-index", default_value_t = 0)]
         account_index: u32,
-        /// When set, broadcast the built transaction via Esplora and print txid
+        /// When true, broadcast the built transaction via Esplora; otherwise only print it
         #[arg(long = "broadcast", default_value_t = true)]
         broadcast: bool,
     },
