@@ -13,20 +13,20 @@ const DEFAULT_RELAYS_FILEPATH: &str = ".simplicity-dex/relays.txt";
 const DEFAULT_KEY_PATH: &str = ".simplicity-dex/keypair.txt";
 pub const DEFAULT_CLIENT_TIMEOUT_SECS: u64 = 10;
 
-pub fn write_into_stdout<T: AsRef<str> + std::fmt::Debug>(text: T) -> std::io::Result<usize> {
+pub(crate) fn write_into_stdout<T: AsRef<str> + std::fmt::Debug>(text: T) -> std::io::Result<usize> {
     let mut output = text.as_ref().to_string();
     output.push('\n');
     std::io::stdout().write(output.as_bytes())
 }
 
-#[must_use] 
+#[must_use]
 pub fn default_key_path() -> PathBuf {
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
         .join(DEFAULT_KEY_PATH)
 }
 
-#[must_use] 
+#[must_use]
 pub fn default_relays_path() -> PathBuf {
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
@@ -46,17 +46,17 @@ pub enum FileError {
     KeyParseError(nostr::key::Error, String),
 }
 
-pub fn broadcast_tx_inner(tx: &simplicityhl::elements::Transaction) -> crate::error::Result<String> {
+pub(crate) fn broadcast_tx_inner(tx: &simplicityhl::elements::Transaction) -> crate::error::Result<String> {
     broadcast_tx(tx).map_err(|err| crate::error::CliError::Broadcast(err.to_string()))
 }
 
-pub fn decode_hex(str: impl AsRef<[u8]>) -> crate::error::Result<Vec<u8>> {
+pub(crate) fn decode_hex(str: impl AsRef<[u8]>) -> crate::error::Result<Vec<u8>> {
     let str_to_convert = str.as_ref();
     hex::decode(str_to_convert).map_err(|err| crate::error::CliError::FromHex(err, str_to_convert.to_hex()))
 }
 
 #[instrument(err)]
-pub fn vec_to_arr<const N: usize, T: Debug>(vec: Vec<T>) -> crate::error::Result<[T; N]> {
+pub(crate) fn vec_to_arr<const N: usize, T: Debug>(vec: Vec<T>) -> crate::error::Result<[T; N]> {
     if vec.len() < N {
         return Err(crate::error::CliError::InvalidElementsSize {
             got: vec.len(),
@@ -76,18 +76,18 @@ pub fn vec_to_arr<const N: usize, T: Debug>(vec: Vec<T>) -> crate::error::Result
 pub const PUBLIC_SECRET_KEY: [u8; 32] = [2; 32];
 
 #[inline]
-pub fn derive_public_oracle_keypair() -> crate::error::Result<secp256k1::Keypair> {
+pub(crate) fn derive_public_oracle_keypair() -> crate::error::Result<secp256k1::Keypair> {
     let blinder_key =
         secp256k1::Keypair::from_secret_key(secp256k1::SECP256K1, &SecretKey::from_slice(&PUBLIC_SECRET_KEY)?);
     Ok(blinder_key)
 }
 
 #[inline]
-pub fn derive_oracle_pubkey() -> crate::error::Result<PublicKey> {
+pub(crate) fn derive_oracle_pubkey() -> crate::error::Result<PublicKey> {
     Ok(derive_public_oracle_keypair()?.public_key())
 }
 
-pub fn entropy_to_asset_id(el: impl AsRef<[u8]>) -> crate::error::Result<AssetId> {
+pub(crate) fn entropy_to_asset_id(el: impl AsRef<[u8]>) -> crate::error::Result<AssetId> {
     use simplicity::hashes::sha256;
     let el = el.as_ref();
     let mut asset_entropy_bytes =

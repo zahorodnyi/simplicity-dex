@@ -185,7 +185,11 @@ pub fn handle(
     )
     .map_err(|err| crate::error::CliError::DcdManager(err.to_string()))?;
 
-    if broadcast { println!("Broadcasted txid: {}", broadcast_tx_inner(&transaction)?) } else { println!("{}", transaction.serialize().to_lower_hex_string()) }
+    if broadcast {
+        println!("Broadcasted txid: {}", broadcast_tx_inner(&transaction)?);
+    } else {
+        println!("{}", transaction.serialize().to_lower_hex_string());
+    }
 
     Ok((
         transaction.txid(),

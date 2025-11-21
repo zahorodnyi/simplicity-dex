@@ -1,7 +1,7 @@
 use crate::common::settings::Settings;
 use simplicityhl::elements::secp256k1_zkp as secp256k1;
 
-#[must_use] 
+#[must_use]
 pub fn derive_secret_key_from_index(index: u32, settings: Settings) -> secp256k1::SecretKey {
     let seed_vec = hex::decode(settings.seed_hex).expect("SEED_HEX must be hex");
     assert_eq!(seed_vec.len(), 32, "SEED_HEX must be 32 bytes hex");

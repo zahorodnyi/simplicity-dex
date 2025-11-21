@@ -31,7 +31,7 @@ pub enum DcdCliAssets {
 impl DcdCliAssets {
     /// Convert the CLI representation into the four asset IDs required by `DCDArguments`.
     /// The fourth returned ID is the settlement asset.
-    pub fn to_asset_ids(
+    pub(crate) fn to_asset_ids(
         &self,
     ) -> crate::error::Result<(
         AssetIdHex, // filler_token_asset_id_hex_le
@@ -67,7 +67,7 @@ impl DcdCliAssets {
 }
 
 // Placeholder value parser for `DcdCliAssets`. Implement parsing logic as needed.
-pub fn parse_dcd_cli_assets(_s: &str) -> Result<DcdCliAssets, String> {
+pub(crate) fn parse_dcd_cli_assets(_s: &str) -> Result<DcdCliAssets, String> {
     // TODO: implement real parser
     Err("parse_dcd_cli_assets is not implemented yet".to_string())
 }
@@ -236,7 +236,7 @@ impl From<InitOrderArgs> for InnerDcdInitParams {
 
 impl DCDCliArguments {
     #[instrument(level = "debug", skip_all, err)]
-    pub fn convert_to_dcd_arguments(self) -> crate::error::Result<DCDArguments> {
+    pub(crate) fn convert_to_dcd_arguments(self) -> crate::error::Result<DCDArguments> {
         let (
             filler_token_asset_id_hex_le,
             grantor_collateral_token_asset_id_hex_le,
@@ -271,7 +271,7 @@ impl DCDCliArguments {
 
 impl DCDCliMakerFundArguments {
     #[instrument(level = "debug", skip_all, err)]
-    pub fn convert_to_dcd_arguments(&self) -> crate::error::Result<DCDArguments> {
+    pub(crate) fn convert_to_dcd_arguments(&self) -> crate::error::Result<DCDArguments> {
         Ok(DCDArguments {
             taker_funding_start_time: self.taker_funding_start_time,
             taker_funding_end_time: self.taker_funding_end_time,

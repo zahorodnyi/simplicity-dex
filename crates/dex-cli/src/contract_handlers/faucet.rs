@@ -55,7 +55,9 @@ pub fn create_asset(
     if broadcast {
         println!("Broadcasted txid: {}", broadcast_tx_inner(&tx)?);
         store.insert_value(asset_name, asset_entropy.as_bytes())?;
-    } else { println!("{}", tx.serialize().to_lower_hex_string()) }
+    } else {
+        println!("{}", tx.serialize().to_lower_hex_string());
+    }
     Ok(())
 }
 
@@ -100,10 +102,12 @@ pub fn mint_asset(
     )
     .map_err(|err| crate::error::CliError::DcdManager(err.to_string()))?;
 
-    println!(
-        "Minting asset: '{asset_id}', Reissue asset id: '{reissuance_asset_id}'"
-    );
-    if broadcast { println!("Broadcasted txid: {}", broadcast_tx_inner(&tx)?) } else { println!("{}", tx.serialize().to_lower_hex_string()) }
+    println!("Minting asset: '{asset_id}', Reissue asset id: '{reissuance_asset_id}'");
+    if broadcast {
+        println!("Broadcasted txid: {}", broadcast_tx_inner(&tx)?);
+    } else {
+        println!("{}", tx.serialize().to_lower_hex_string());
+    }
     Ok(())
 }
 

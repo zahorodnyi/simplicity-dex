@@ -69,7 +69,12 @@ impl AggregatedConfig {
             tracing::debug!("Adding relays values from CLI, relays: '{:?}'", relays);
             config_builder = config_builder.set_override_option(
                 "relays",
-                Some(relays.iter().map(std::string::ToString::to_string).collect::<Vec<String>>()),
+                Some(
+                    relays
+                        .iter()
+                        .map(std::string::ToString::to_string)
+                        .collect::<Vec<String>>(),
+                ),
             )?;
         }
 

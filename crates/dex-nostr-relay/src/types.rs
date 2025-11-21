@@ -9,12 +9,12 @@ use std::str::FromStr;
 pub trait CustomKind {
     const ORDER_KIND_NUMBER: u16;
 
-    #[must_use] 
+    #[must_use]
     fn get_kind() -> Kind {
         Kind::from(Self::ORDER_KIND_NUMBER)
     }
 
-    #[must_use] 
+    #[must_use]
     fn get_u16() -> u16 {
         Self::ORDER_KIND_NUMBER
     }
@@ -209,10 +209,7 @@ impl fmt::Display for MakerOrderEvent {
         let maker_tx = self.maker_fund_tx_id.to_string();
 
         // write a detailed multi-line, tab-separated view
-        writeln!(
-            f,
-            "[Maker Order - Detail]\n\tevent_id={event_short}\ttime={time_str}"
-        )?;
+        writeln!(f, "[Maker Order - Detail]\n\tevent_id={event_short}\ttime={time_str}")?;
         writeln!(f, "\tdcd_arguments:")?;
         writeln!(f, "\t\tstrike_price:\t{}", self.dcd_arguments.strike_price)?;
         writeln!(f, "\t\tincentive_bps:\t{}", self.dcd_arguments.incentive_basis_points)?;
@@ -282,7 +279,7 @@ impl MakerOrderEvent {
         })
     }
 
-    #[must_use] 
+    #[must_use]
     pub fn summary(&self) -> MakerOrderSummary {
         let oracle_full = &self.dcd_arguments.oracle_public_key;
         let oracle_short = if oracle_full.is_empty() {
