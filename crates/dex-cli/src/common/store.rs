@@ -49,7 +49,6 @@ impl Store {
         Ok(self.store.get(key)?)
     }
 
-    #[allow(unused)]
     pub fn import_arguments<A>(
         &self,
         taproot_pubkey_gen: &str,
@@ -71,7 +70,6 @@ impl Store {
         Ok(())
     }
 
-    #[allow(unused)]
     pub fn export_arguments(&self, taproot_pubkey_gen: &str) -> Result<String> {
         if let Some(value) = self.store.get(taproot_pubkey_gen)? {
             return Ok(hex::encode(value));

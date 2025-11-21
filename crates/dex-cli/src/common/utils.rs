@@ -1,3 +1,5 @@
+// TODO(Illia): refactor this.
+
 use elements::hex::ToHex;
 use elements::secp256k1_zkp::PublicKey;
 use hex::FromHex;
@@ -32,6 +34,7 @@ pub fn default_relays_path() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("."))
         .join(DEFAULT_RELAYS_FILEPATH)
 }
+
 #[derive(Debug, thiserror::Error)]
 pub enum FileError {
     #[error("Unable to parse url: {1}, error: {0}")]

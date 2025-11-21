@@ -85,9 +85,11 @@ impl Cli {
     #[instrument(skip(self))]
     pub async fn process(self) -> crate::error::Result<()> {
         let agg_config = self.init_config()?;
+
         let relay_processor = self
             .init_relays(&agg_config.relays, agg_config.nostr_keypair.clone())
             .await?;
+
         let msg = {
             match self.command {
                 Command::ShowConfig => {
