@@ -79,6 +79,8 @@ impl AggregatedConfig {
             )?;
         }
 
+        // TODO(Alex): add Liquid private key
+
         let config = match config_builder.build()?.try_deserialize::<AggregatedConfigInner>() {
             Ok(conf) => Ok(conf),
             Err(e) => Err(ConfigExtended(format!(
