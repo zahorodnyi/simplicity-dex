@@ -238,7 +238,7 @@ impl fmt::Display for MakerOrderEvent {
         writeln!(
             f,
             "\n\tfull_dcd_arguments_debug:\n\t{}",
-            format!("{:#?}", self.dcd_arguments)
+            format_args!("{:#?}", self.dcd_arguments)
         )?;
 
         Ok(())

@@ -1,7 +1,7 @@
 use crate::cli::helper::HelperCommands;
 use crate::cli::{DexCommands, MakerCommands, TakerCommands};
-use crate::common::config::{AggregatedConfig, CliConfigArgs, KeysWrapper};
-use crate::common::{DEFAULT_CLIENT_TIMEOUT_SECS, check_file_existence, write_into_stdout};
+use crate::common::config::AggregatedConfig;
+use crate::common::{DEFAULT_CLIENT_TIMEOUT_SECS, write_into_stdout};
 use crate::contract_handlers;
 use clap::{Parser, Subcommand};
 use dex_nostr_relay::relay_client::ClientConfig;
@@ -13,62 +13,57 @@ use std::str::FromStr;
 use std::time::Duration;
 use tracing::instrument;
 
+pub(crate) const DEFAULT_CONFIG_PATH: &str = ".simplicity-dex.config.toml";
+
 #[derive(Parser)]
 pub struct Cli {
-    #[arg(
-        short = 'k',
-        long,
-        help = "Private key used to authenticate and sign events on the Nostr relays (hex or bech32)"
-    )]
-    nostr_key: Option<Keys>,
-    #[arg(
-        short = 'r',
-        long,
-        help = "List of Nostr relay URLs to connect to (e.g. wss://relay.example.com)",
-        value_delimiter = ','
-    )]
-    relays_list: Option<Vec<RelayUrl>>,
-    #[arg(
-        short = 'c',
-        long,
-        help = "Path to a config file containing the list of relays and(or) nostr keypair to use",
-        value_parser = check_file_existence
-    )]
-    nostr_config_path: Option<PathBuf>,
+    /// Private key used to authenticate and sign events on the Nostr relays (hex or bech32)
+    #[arg(short = 'k', long, env = "DEX_NOSTR_KEYPAIR")]
+    pub(crate) nostr_key: Option<Keys>,
+
+    /// List of Nostr relay URLs to connect to (e.g. wss://relay.example.com)
+    #[arg(short = 'r', long, value_delimiter = ',', env = "DEX_NOSTR_RELAYS")]
+    pub(crate) relays_list: Option<Vec<RelayUrl>>,
+
+    /// Path to a config file containing the list of relays and(or) nostr keypair to use
+    #[arg(short = 'c', long, default_value = DEFAULT_CONFIG_PATH, env = "DEX_NOSTR_CONFIG_PATH")]
+    pub(crate) nostr_config_path: PathBuf,
+
+    /// Command to execute
     #[command(subcommand)]
     command: Command,
 }
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    #[command(about = "Maker-side commands for creating and managing DCD orders")]
+    /// Maker-side commands for creating and managing DCD orders
+    #[command()]
     Maker {
         #[command(subcommand)]
         action: MakerCommands,
     },
-    #[command(about = "Taker-side commands for funding and managing DCD positions")]
+
+    /// Taker-side commands for funding and managing DCD positions
+    #[command()]
     Taker {
         #[command(subcommand)]
         action: TakerCommands,
     },
+
     #[command(flatten)]
     Dex(DexCommands),
+
     #[command(flatten)]
     Helpers(HelperCommands),
-    #[command(about = "Print the aggregated CLI and relay configuration")]
-    TestConfigShow,
+
+    /// Print the aggregated CLI and relay configuration
+    #[command()]
+    ShowConfig,
 }
 
 impl Cli {
     pub fn init_config(&self) -> crate::error::Result<AggregatedConfig> {
-        let nostr_key = self.nostr_key.clone();
-        let relays_list = self.relays_list.clone();
-        let nostr_config_path = self.nostr_config_path.clone();
-        AggregatedConfig::new(CliConfigArgs {
-            nostr_key: nostr_key.map(KeysWrapper),
-            relays_list,
-            nostr_config_path,
-        })
+        AggregatedConfig::new(self)
     }
 
     pub async fn init_relays(
@@ -95,7 +90,7 @@ impl Cli {
             .await?;
         let msg = {
             match self.command {
-                Command::TestConfigShow => {
+                Command::ShowConfig => {
                     format!("config: {agg_config:#?}")
                 }
                 Command::Maker { action } => match action {

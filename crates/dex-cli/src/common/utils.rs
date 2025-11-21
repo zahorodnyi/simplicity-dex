@@ -44,16 +44,6 @@ pub enum FileError {
     KeyParseError(nostr::key::Error, String),
 }
 
-pub fn check_file_existence(path: &str) -> Result<PathBuf, String> {
-    let path = PathBuf::from(path);
-
-    if path.is_file() {
-        Ok(path)
-    } else {
-        Err(FileError::IncorrectPathToFile(path.clone()).to_string())
-    }
-}
-
 pub fn broadcast_tx_inner(tx: &simplicityhl::elements::Transaction) -> crate::error::Result<String> {
     broadcast_tx(tx).map_err(|err| crate::error::CliError::Broadcast(err.to_string()))
 }
