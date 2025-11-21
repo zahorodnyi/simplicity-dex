@@ -139,10 +139,7 @@ pub fn handle(
         filler_token_entropy, grantor_collateral_token_entropy, grantor_settlement_token_entropy, taproot_pubkey_gen
     );
 
-    match broadcast {
-        true => println!("Broadcasted txid: {}", broadcast_tx_inner(&tx)?),
-        false => println!("{}", tx.serialize().to_lower_hex_string()),
-    }
+    if broadcast { println!("Broadcasted txid: {}", broadcast_tx_inner(&tx)?) } else { println!("{}", tx.serialize().to_lower_hex_string()) }
     let args_to_save = ArgsToSave {
         filler_token_entropy,
         grantor_collateral_token_entropy,

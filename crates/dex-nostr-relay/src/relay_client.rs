@@ -45,7 +45,7 @@ impl RelayClient {
             let url = url
                 .try_into_url()
                 .map_err(|err| NostrRelayError::FailedToConvertRelayUrl {
-                    err_msg: format!("{:?}", err),
+                    err_msg: format!("{err:?}"),
                 })?;
 
             client.add_relay(url).await?;

@@ -1,7 +1,6 @@
 use crate::cli::{Cli, DEFAULT_CONFIG_PATH};
 use crate::error::CliError::ConfigExtended;
 
-use std::path::PathBuf;
 use std::str::FromStr;
 
 use config::{Config, File, FileFormat, ValueKind};
@@ -70,7 +69,7 @@ impl AggregatedConfig {
             tracing::debug!("Adding relays values from CLI, relays: '{:?}'", relays);
             config_builder = config_builder.set_override_option(
                 "relays",
-                Some(relays.iter().map(|r| r.to_string()).collect::<Vec<String>>()),
+                Some(relays.iter().map(std::string::ToString::to_string).collect::<Vec<String>>()),
             )?;
         }
 

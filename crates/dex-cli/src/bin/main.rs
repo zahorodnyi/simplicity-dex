@@ -1,3 +1,5 @@
+#![warn(clippy::all, clippy::pedantic)]
+
 use clap::Parser;
 
 use global_utils::logger::init_logger;

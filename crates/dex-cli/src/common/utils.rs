@@ -19,12 +19,14 @@ pub fn write_into_stdout<T: AsRef<str> + std::fmt::Debug>(text: T) -> std::io::R
     std::io::stdout().write(output.as_bytes())
 }
 
+#[must_use] 
 pub fn default_key_path() -> PathBuf {
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
         .join(DEFAULT_KEY_PATH)
 }
 
+#[must_use] 
 pub fn default_relays_path() -> PathBuf {
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
@@ -66,7 +68,7 @@ pub fn vec_to_arr<const N: usize, T: Debug>(vec: Vec<T>) -> crate::error::Result
         .take(N)
         .collect::<Vec<_>>()
         .try_into()
-        .map_err(|e| crate::error::CliError::Custom(format!("Failed to remove elements from '{:?}'", e)))?;
+        .map_err(|e| crate::error::CliError::Custom(format!("Failed to remove elements from '{e:?}'")))?;
 
     Ok(arr)
 }

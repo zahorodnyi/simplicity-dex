@@ -21,7 +21,7 @@ pub struct Cli {
     #[arg(short = 'k', long, env = "DEX_NOSTR_KEYPAIR")]
     pub(crate) nostr_key: Option<Keys>,
 
-    /// List of Nostr relay URLs to connect to (e.g. wss://relay.example.com)
+    /// List of Nostr relay URLs to connect to (e.g. <wss://relay.example.com>)
     #[arg(short = 'r', long, value_delimiter = ',', env = "DEX_NOSTR_RELAYS")]
     pub(crate) relays_list: Option<Vec<RelayUrl>>,
 
@@ -339,7 +339,7 @@ impl Cli {
                     }
                     HelperCommands::Address { account_index: index } => {
                         let (x_only_pubkey, addr) = contract_handlers::address::handle(index)?;
-                        format!("X Only Public Key: '{}', P2PK Address: '{}'", x_only_pubkey, addr)
+                        format!("X Only Public Key: '{x_only_pubkey}', P2PK Address: '{addr}'")
                     }
                 },
                 Command::Dex(x) => match x {
@@ -349,7 +349,7 @@ impl Cli {
                     }
                     DexCommands::ListOrders => {
                         let res = relay_processor.list_orders().await?;
-                        let body = format_items(&res, |e| e.to_string());
+                        let body = format_items(&res, std::string::ToString::to_string);
                         format!("List of available orders:\n{body}")
                     }
                     DexCommands::GetEventsById { event_id } => {
@@ -358,7 +358,7 @@ impl Cli {
                     }
                     DexCommands::GetOrderById { event_id } => {
                         let res = relay_processor.get_order_by_id(event_id).await?;
-                        let body = format_items(&res, |e| e.to_string());
+                        let body = format_items(&res, std::string::ToString::to_string);
                         format!("Order {event_id}: {body}")
                     }
                 },

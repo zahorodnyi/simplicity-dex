@@ -23,7 +23,7 @@ pub fn create_asset(
 
     if store.is_exist(&asset_name)? {
         return Err(crate::error::CliError::AssetNameExists { name: asset_name });
-    };
+    }
 
     let settings = Settings::load().map_err(|err| crate::error::CliError::EnvNotSet(err.to_string()))?;
     let keypair = secp256k1::Keypair::from_secret_key(
@@ -50,16 +50,12 @@ pub fn create_asset(
     .map_err(|err| crate::error::CliError::DcdManager(err.to_string()))?;
 
     println!(
-        "Test token asset entropy: '{}', asset_id: '{}', reissue_asset_id: '{}'",
-        asset_entropy, asset_id, reissuance_asset_id
+        "Test token asset entropy: '{asset_entropy}', asset_id: '{asset_id}', reissue_asset_id: '{reissuance_asset_id}'"
     );
-    match broadcast {
-        true => {
-            println!("Broadcasted txid: {}", broadcast_tx_inner(&tx)?);
-            store.insert_value(asset_name, asset_entropy.as_bytes())?;
-        }
-        false => println!("{}", tx.serialize().to_lower_hex_string()),
-    }
+    if broadcast {
+        println!("Broadcasted txid: {}", broadcast_tx_inner(&tx)?);
+        store.insert_value(asset_name, asset_entropy.as_bytes())?;
+    } else { println!("{}", tx.serialize().to_lower_hex_string()) }
     Ok(())
 }
 
@@ -105,13 +101,9 @@ pub fn mint_asset(
     .map_err(|err| crate::error::CliError::DcdManager(err.to_string()))?;
 
     println!(
-        "Minting asset: '{}', Reissue asset id: '{}'",
-        asset_id, reissuance_asset_id
+        "Minting asset: '{asset_id}', Reissue asset id: '{reissuance_asset_id}'"
     );
-    match broadcast {
-        true => println!("Broadcasted txid: {}", broadcast_tx_inner(&tx)?),
-        false => println!("{}", tx.serialize().to_lower_hex_string()),
-    }
+    if broadcast { println!("Broadcasted txid: {}", broadcast_tx_inner(&tx)?) } else { println!("{}", tx.serialize().to_lower_hex_string()) }
     Ok(())
 }
 

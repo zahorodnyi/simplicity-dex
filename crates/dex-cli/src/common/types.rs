@@ -108,7 +108,7 @@ pub struct DCDCliArguments {
     pub filler_per_principal_collateral: u64,
 
     // Oracle
-    /// Oracle public key (secp256k1 PublicKey). If not provided, a default derived
+    /// Oracle public key (secp256k1 `PublicKey`). If not provided, a default derived
     /// public key is used when available.
     #[arg(long = "oracle-pubkey", default_value_t = derive_oracle_pubkey().unwrap())]
     pub oracle_public_key: secp256k1::PublicKey,
@@ -158,7 +158,7 @@ pub struct DCDCliMakerFundArguments {
     pub filler_per_principal_collateral: u64,
 
     // Oracle
-    /// Oracle public key (secp256k1 PublicKey). If not provided, a default derived
+    /// Oracle public key (secp256k1 `PublicKey`). If not provided, a default derived
     /// public key is used when available.
     #[arg(long = "oracle-pubkey", default_value_t = derive_oracle_pubkey().unwrap())]
     pub oracle_public_key: secp256k1::PublicKey,

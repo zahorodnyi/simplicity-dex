@@ -135,8 +135,7 @@ pub mod store_utils {
         let bytes = store.get_arguments_raw(&get_filler_entropy_key(taproot_pubkey))?;
         let x = String::from_utf8(bytes.to_vec()).map_err(|err| {
             crate::error::CliError::Cache(format!(
-                "Failed to obtain cached value for 'filler_token_entropy', err: {}",
-                err
+                "Failed to obtain cached value for 'filler_token_entropy', err: {err}"
             ))
         })?;
         Ok(x)
@@ -168,8 +167,7 @@ pub mod store_utils {
         let bytes = store.get_arguments_raw(&get_grantor_collateral_token_entropy_key(taproot_pubkey))?;
         let x = String::from_utf8(bytes.to_vec()).map_err(|err| {
             crate::error::CliError::Cache(format!(
-                "Failed to obtain cached value for 'filler_token_entropy', err: {}",
-                err
+                "Failed to obtain cached value for 'filler_token_entropy', err: {err}"
             ))
         })?;
         Ok(x)
@@ -201,8 +199,7 @@ pub mod store_utils {
         let bytes = store.get_arguments_raw(&get_grantor_settlement_token_entropy_key(taproot_pubkey))?;
         let x = String::from_utf8(bytes.to_vec()).map_err(|err| {
             crate::error::CliError::Cache(format!(
-                "Failed to obtain cached value for 'filler_token_entropy', err: {}",
-                err
+                "Failed to obtain cached value for 'filler_token_entropy', err: {err}"
             ))
         })?;
         Ok(x)

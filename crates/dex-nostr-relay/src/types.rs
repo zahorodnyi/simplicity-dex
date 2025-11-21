@@ -9,10 +9,12 @@ use std::str::FromStr;
 pub trait CustomKind {
     const ORDER_KIND_NUMBER: u16;
 
+    #[must_use] 
     fn get_kind() -> Kind {
         Kind::from(Self::ORDER_KIND_NUMBER)
     }
 
+    #[must_use] 
     fn get_u16() -> u16 {
         Self::ORDER_KIND_NUMBER
     }
@@ -21,7 +23,7 @@ pub trait CustomKind {
 pub const POW_DIFFICULTY: u8 = 1;
 pub const BLOCKSTREAM_MAKER_CONTENT: &str = "Liquid order [Maker]!";
 pub const BLOCKSTREAM_TAKER_CONTENT: &str = "Liquid order [Taker]!";
-/// MAKER_EXPIRATION_TIME = 31 days
+/// `MAKER_EXPIRATION_TIME` = 31 days
 /// TODO: move to the config
 pub const MAKER_EXPIRATION_TIME: u64 = 2_678_400;
 pub const MAKER_DCD_ARG_TAG: &str = "dcd_arguments_(hex&bincode)";
@@ -152,7 +154,7 @@ impl fmt::Display for MakerOrderEvent {
             if ts == 0 {
                 None
             } else {
-                chrono::Utc.timestamp_opt(ts as i64, 0).single()
+                chrono::Utc.timestamp_opt(i64::from(ts), 0).single()
             }
         };
         let taker_end = {
@@ -160,7 +162,7 @@ impl fmt::Display for MakerOrderEvent {
             if ts == 0 {
                 None
             } else {
-                chrono::Utc.timestamp_opt(ts as i64, 0).single()
+                chrono::Utc.timestamp_opt(i64::from(ts), 0).single()
             }
         };
         let taker_range = match (taker_start, taker_end) {
@@ -209,30 +211,29 @@ impl fmt::Display for MakerOrderEvent {
         // write a detailed multi-line, tab-separated view
         writeln!(
             f,
-            "[Maker Order - Detail]\n\tevent_id={}\ttime={}",
-            event_short, time_str
+            "[Maker Order - Detail]\n\tevent_id={event_short}\ttime={time_str}"
         )?;
         writeln!(f, "\tdcd_arguments:")?;
         writeln!(f, "\t\tstrike_price:\t{}", self.dcd_arguments.strike_price)?;
         writeln!(f, "\t\tincentive_bps:\t{}", self.dcd_arguments.incentive_basis_points)?;
-        writeln!(f, "\t\ttaker_funding:\t{}", taker_range)?;
+        writeln!(f, "\t\ttaker_funding:\t{taker_range}")?;
         writeln!(f, "\t\tsettlement_height:\t{}", self.dcd_arguments.settlement_height)?;
-        writeln!(f, "\t\toracle_pubkey:\t{}", oracle_display)?;
-        writeln!(f, "\t\tratio.principal_collateral:\t{}", principal)?;
-        writeln!(f, "\t\tratio.interest_collateral:\t{}", interest_collateral)?;
-        writeln!(f, "\t\tratio.total_collateral:\t{}", total_collateral)?;
-        writeln!(f, "\t\tratio.interest_asset:\t{}", interest_asset)?;
-        writeln!(f, "\t\tratio.total_asset:\t{}", total_asset)?;
+        writeln!(f, "\t\toracle_pubkey:\t{oracle_display}")?;
+        writeln!(f, "\t\tratio.principal_collateral:\t{principal}")?;
+        writeln!(f, "\t\tratio.interest_collateral:\t{interest_collateral}")?;
+        writeln!(f, "\t\tratio.total_collateral:\t{total_collateral}")?;
+        writeln!(f, "\t\tratio.interest_asset:\t{interest_asset}")?;
+        writeln!(f, "\t\tratio.total_asset:\t{total_asset}")?;
 
         writeln!(f, "\tassets:")?;
-        writeln!(f, "\t\tfiller_asset_id:\t{}", filler)?;
-        writeln!(f, "\t\tgrantor_collateral_asset_id:\t{}", grantor_collateral)?;
-        writeln!(f, "\t\tgrantor_settlement_asset_id:\t{}", grantor_settlement)?;
-        writeln!(f, "\t\tsettlement_asset_id:\t{}", settlement)?;
-        writeln!(f, "\t\tcollateral_asset_id:\t{}", collateral)?;
+        writeln!(f, "\t\tfiller_asset_id:\t{filler}")?;
+        writeln!(f, "\t\tgrantor_collateral_asset_id:\t{grantor_collateral}")?;
+        writeln!(f, "\t\tgrantor_settlement_asset_id:\t{grantor_settlement}")?;
+        writeln!(f, "\t\tsettlement_asset_id:\t{settlement}")?;
+        writeln!(f, "\t\tcollateral_asset_id:\t{collateral}")?;
 
         writeln!(f, "\tdcd_taproot_pubkey_gen:\t{}", self.dcd_taproot_pubkey_gen)?;
-        writeln!(f, "\tmaker_fund_tx_id:\t{}", maker_tx)?;
+        writeln!(f, "\tmaker_fund_tx_id:\t{maker_tx}")?;
 
         // append a Debug dump of the full DCDArguments for completeness (if Debug is implemented)
         writeln!(
@@ -281,6 +282,7 @@ impl MakerOrderEvent {
         })
     }
 
+    #[must_use] 
     pub fn summary(&self) -> MakerOrderSummary {
         let oracle_full = &self.dcd_arguments.oracle_public_key;
         let oracle_short = if oracle_full.is_empty() {
@@ -288,7 +290,7 @@ impl MakerOrderEvent {
         } else if oracle_full.len() > 8 {
             oracle_full[..8].to_string()
         } else {
-            oracle_full.to_string()
+            oracle_full.clone()
         };
 
         let principal = match &self.dcd_arguments.ratio_args {
@@ -334,7 +336,7 @@ impl MakerOrderEvent {
                 if ts == 0 {
                     None
                 } else {
-                    chrono::Utc.timestamp_opt(ts as i64, 0).single()
+                    chrono::Utc.timestamp_opt(i64::from(ts), 0).single()
                 }
             },
             taker_fund_end_time: {
@@ -342,7 +344,7 @@ impl MakerOrderEvent {
                 if ts == 0 {
                     None
                 } else {
-                    chrono::Utc.timestamp_opt(ts as i64, 0).single()
+                    chrono::Utc.timestamp_opt(i64::from(ts), 0).single()
                 }
             },
             settlement_height: self.dcd_arguments.settlement_height,
