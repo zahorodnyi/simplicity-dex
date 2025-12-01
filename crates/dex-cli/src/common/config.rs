@@ -95,14 +95,6 @@ impl From<KeysWrapper> for ValueKind {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-struct AggregatedConfigInner {
-    pub nostr_keypair: Option<KeysWrapper>,
-    pub relays: Option<Vec<RelayUrl>>,
-    pub seed_hex: Option<HexSeed>,
-    pub maker_expiration_time: u64,
-}
-
 impl AggregatedConfig {
     /// Build aggregated configuration from CLI arguments and optional config file.
     ///
@@ -122,6 +114,14 @@ impl AggregatedConfig {
             maker_expiration_time,
             ..
         } = cli;
+
+        #[derive(Deserialize, Serialize, Debug)]
+        struct AggregatedConfigInner {
+            pub nostr_keypair: Option<KeysWrapper>,
+            pub relays: Option<Vec<RelayUrl>>,
+            pub seed_hex: Option<HexSeed>,
+            pub maker_expiration_time: u64,
+        }
 
         let mut config_builder = Config::builder()
             .add_source(
@@ -241,6 +241,14 @@ mod tests {
     const MAKER_EXPIRATION_TIME_CLI_CMD: &str = "--maker-expiration-time";
     const TEST_PROGRAM_NAME_CLI_CMD: &str = "test-program";
 
+    #[derive(Deserialize, Serialize, Debug)]
+    struct AggregatedConfigInner {
+        pub nostr_keypair: Option<KeysWrapper>,
+        pub relays: Option<Vec<RelayUrl>>,
+        pub seed_hex: Option<HexSeed>,
+        pub maker_expiration_time: Option<u64>,
+    }
+
     fn create_temp_config_file(config_inner: &AggregatedConfigInner) -> (TempDir, PathBuf) {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let config_path = temp_dir.path().join("test_config.toml");
@@ -266,7 +274,7 @@ mod tests {
             nostr_keypair: Some(KeysWrapper(Keys::from_str(TEST_NOSTR_KEY)?)),
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: Some(HexSeed::new(TEST_SEED_HEX)?),
-            maker_expiration_time: TEST_EXPIRATION_TIME,
+            maker_expiration_time: Some(TEST_EXPIRATION_TIME),
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -292,7 +300,7 @@ mod tests {
             nostr_keypair: Some(KeysWrapper(Keys::from_str(file_key)?)),
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -324,7 +332,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -355,7 +363,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: Some(HexSeed::new(file_seed)?),
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -386,7 +394,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: file_expiration,
+            maker_expiration_time: Some(file_expiration),
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -413,7 +421,7 @@ mod tests {
             nostr_keypair: Some(KeysWrapper(Keys::from_str(TEST_NOSTR_KEY)?)),
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: Some(HexSeed::new(TEST_SEED_HEX)?),
-            maker_expiration_time: TEST_EXPIRATION_TIME,
+            maker_expiration_time: Some(TEST_EXPIRATION_TIME),
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -443,7 +451,7 @@ mod tests {
 
         // Verify all override file values
         assert!(config.nostr_keypair.is_some());
-        let cli_keys = Keys::from_str(cli_key).unwrap();
+        let cli_keys = Keys::from_str(cli_key)?;
         assert_eq!(
             config.nostr_keypair.unwrap().secret_key().to_secret_hex(),
             cli_keys.secret_key().to_secret_hex()
@@ -465,7 +473,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -483,7 +491,7 @@ mod tests {
             nostr_keypair: None,
             relays: None,
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -501,7 +509,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -529,7 +537,7 @@ mod tests {
                 RelayUrl::parse(relay3)?,
             ]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -550,7 +558,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -567,7 +575,6 @@ mod tests {
 
         let config = AggregatedConfig::new(&cli).expect("Failed to create config");
 
-        // CLI relays should override file relays
         assert_eq!(config.relays.len(), 2);
         assert_eq!(config.relays[0].to_string(), TEST_RELAY_2);
         assert_eq!(config.relays[1].to_string(), "wss://relay3.example.com");
@@ -580,7 +587,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -599,7 +606,7 @@ mod tests {
             nostr_keypair: Some(KeysWrapper(Keys::from_str(TEST_NOSTR_KEY)?)),
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -618,7 +625,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -638,7 +645,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: Some(HexSeed::new(TEST_SEED_HEX)?),
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -657,7 +664,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -722,7 +729,7 @@ mod tests {
             nostr_keypair: None,
             relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: TEST_EXPIRATION_TIME,
+            maker_expiration_time: Some(TEST_EXPIRATION_TIME),
         };
 
         let (_temp_dir, config_path) = create_temp_config_file(&config_inner);
@@ -746,12 +753,12 @@ mod tests {
         let config2 = AggregatedConfig::new(&cli2).expect("Failed to create config");
         assert_eq!(config2.maker_expiration_time, cli_expiration);
 
-        // Default value when neither CLI nor config specify
+        // Test 3: Default value when neither CLI nor config specify
         let minimal_config = AggregatedConfigInner {
             nostr_keypair: None,
-            relays: Some(vec![RelayUrl::parse(TEST_RELAY_1).unwrap()]),
+            relays: Some(vec![RelayUrl::parse(TEST_RELAY_1)?]),
             seed_hex: None,
-            maker_expiration_time: MAKER_EXPIRATION_TIME,
+            maker_expiration_time: None,
         };
         let (_temp_dir3, config_path3) = create_temp_config_file(&minimal_config);
         let cli3 = create_test_cli(&config_path3);
